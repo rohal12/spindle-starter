@@ -1,4 +1,4 @@
-<img src="src/assets/media/favicon.png" width="120" align="right" />
+<img src="src/assets/media/favicon.svg" width="120" align="right" />
 
 # Spindle Starter
 
