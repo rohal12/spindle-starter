@@ -4,6 +4,8 @@
 
 The easiest starter kit for building [Spindle](https://rohal12.github.io/spindle/) stories with [twee-ts](https://github.com/rohal12/twee-ts).
 
+**[Read the full documentation](https://rohal12.github.io/spindle-starter/)**
+
 ## Features
 
 - No binary downloads — pure npm packages
@@ -44,14 +46,14 @@ The easiest starter kit for building [Spindle](https://rohal12.github.io/spindle
 
 ## Commands
 
-| Command | Description |
-|---------|-------------|
-| `npm start` | Start development server with live reload |
-| `npm run dev` | Same as `npm start` |
-| `npm run build` | Production build to `dist/` |
-| `npm run preview` | Preview production build |
-| `npm run publish:pages` | Deploy to GitHub Pages (via `gh` CLI) |
-| `npm run publish:itch` | Deploy to itch.io (via `butler`) |
+| Command                 | Description                               |
+| ----------------------- | ----------------------------------------- |
+| `npm start`             | Start development server with live reload |
+| `npm run dev`           | Same as `npm start`                       |
+| `npm run build`         | Production build to `dist/`               |
+| `npm run preview`       | Preview production build                  |
+| `npm run publish:pages` | Deploy to GitHub Pages (via `gh` CLI)     |
+| `npm run publish:itch`  | Deploy to itch.io (via `butler`)          |
 
 ## Directory Structure
 
@@ -113,7 +115,10 @@ Example in HTML:
 Paste into [`src/head-content.html`](./src/head-content.html):
 
 ```html
-<script async src="https://www.googletagmanager.com/gtag/js?id=YOUR_TAG_HERE"></script>
+<script
+  async
+  src="https://www.googletagmanager.com/gtag/js?id=YOUR_TAG_HERE"
+></script>
 ```
 
 Replace `YOUR_TAG_HERE` with your Google Analytics ID.
@@ -140,6 +145,7 @@ npm run publish:pages
 **GitHub Actions:** A workflow at `.github/workflows/deploy-itch.yml` builds and pushes to itch.io using [butler](https://itch.io/docs/butler/).
 
 **Setup:** Add the following to your GitHub repo:
+
 - **Secret:** `BUTLER_API_KEY` — your itch.io [API key](https://itch.io/user/settings/api-keys)
 - **Variables:** `ITCH_USER` and `ITCH_GAME` (Settings > Secrets and variables > Actions > Variables)
 
