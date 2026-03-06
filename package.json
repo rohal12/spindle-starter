@@ -26,7 +26,6 @@
     "@rohal12/twee-ts": "^1.13.0",
     "@types/browser-sync": "^2.29.1",
     "browser-sync": "^3.0.4",
-    "chokidar": "^5.0.0",
     "postcss": "^8.5.8",
     "postcss-csso": "^6.0.1",
     "postcss-preset-env": "^11.2.0",
