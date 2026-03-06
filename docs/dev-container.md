@@ -16,9 +16,11 @@ The Dev Container provides:
 The fastest way to get started — no local installation needed at all.
 
 1. Go to the [spindle-starter repository](https://github.com/rohal12/spindle-starter)
-2. Click the green **Code** button
-3. Switch to the **Codespaces** tab
-4. Click **Create codespace on main**
+2. Click **Use this template** → **Create a new repository**
+3. Name your repository (e.g. `my-story`) and create it
+4. On your new repository, click the green **Code** button
+5. Switch to the **Codespaces** tab
+6. Click **Create codespace on main**
 
 GitHub will build the container, install dependencies, and open VS Code in your browser. Once it's ready:
 
@@ -28,8 +30,8 @@ npm start
 
 The dev server starts and Codespaces automatically opens it in a new browser tab.
 
-::: tip
-You can also create a codespace from a template. After clicking "Use this template" on GitHub, select "Open in a codespace" instead of creating a repository first.
+::: warning
+Don't create a codespace directly on the spindle-starter template repository — your changes would only exist in that ephemeral codespace with no repository to push to. Always create your own repository first.
 :::
 
 ## Using VS Code Locally
