@@ -1,0 +1,5 @@
+:: StoryInterface
+<header class="story-menubar">
+  {story-title}{back}{forward}{restart}{quicksave}{quickload}{saves}{settings}
+</header>
+{passage}
