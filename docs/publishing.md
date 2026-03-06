@@ -90,14 +90,65 @@ npm run publish:itch -- --channel web
 
 ### Creating Your itch.io Project
 
-If you haven't published to itch.io before:
+If you haven't published to itch.io before, follow this guide to set up your project for a browser-based story game. These settings only need to be configured once — after that, butler pushes will update the game files automatically.
 
-1. Go to [itch.io/game/new](https://itch.io/game/new)
-2. Set **Kind of project** to **HTML**
-3. Fill in the title and other details
-4. Under **Uploads**, you don't need to upload anything manually — butler handles it
-5. Check **This file will be played in the browser**
-6. Save and publish
+#### 1. Create the Project
+
+Go to [itch.io/game/new](https://itch.io/game/new) and fill in:
+
+| Field               | Recommended value                                    |
+| ------------------- | ---------------------------------------------------- |
+| **Title**           | Your game's name                                     |
+| **Kind of project** | **HTML** (required — this enables browser embedding) |
+| **Classification**  | Interactive fiction, or RPG if applicable            |
+| **Release status**  | In development (you can change this later)           |
+
+#### 2. Upload via Butler
+
+You don't need to upload anything through the web form. Run your first butler push instead:
+
+```sh
+npm run publish:itch -- --user your-username --game your-game
+```
+
+Or trigger the GitHub Actions workflow after setting up `BUTLER_API_KEY`, `ITCH_USER`, and `ITCH_GAME` (see [Setup for GitHub Actions](#setup-for-github-actions) above).
+
+After the first push, refresh your project's edit page — you'll see the upload listed under **Uploads**.
+
+#### 3. Configure Embed Settings
+
+Once your upload appears, configure how the game is displayed:
+
+1. Under **Uploads**, check **This file will be played in the browser** on your html5 upload
+2. An **Embed options** section will appear below. Set:
+   - **Embed in page** — this is best for story games so players can start immediately
+   - **Viewport dimensions** — `960 × 600` works well for most Spindle stories. Adjust based on your UI layout
+   - **Enable fullscreen button** — check this so players can expand the game to fill their screen (recommended for RPG interfaces with HUD elements)
+   - **Enable scrollbars** — leave unchecked unless your story content overflows the viewport
+   - **Mobile friendly** — check this if your CSS handles responsive layouts (Spindle's default styles do)
+
+#### 4. Recommended Page Settings
+
+These settings on the same edit page improve the experience for interactive fiction:
+
+| Setting         | Recommendation                                                             |
+| --------------- | -------------------------------------------------------------------------- |
+| **Cover image** | Upload a 630×500 image — this is what players see in search results        |
+| **Description** | Write a short pitch. Mention it's browser-playable with no download needed |
+| **Tags**        | `interactive-fiction`, `twine`, `rpg`, `text-based`, `browser`             |
+| **Genre**       | Role Playing                                                               |
+| **Community**   | Enable comments — player feedback is valuable                              |
+| **Visibility**  | Set to **Public** when you're ready for players to find it                 |
+
+#### 5. Save and Verify
+
+Click **Save** at the bottom, then visit your project page to confirm:
+
+- The game loads in the embedded player
+- The fullscreen button appears and works
+- Text is readable and the UI fits the viewport
+
+Future butler pushes will update the game files without needing to reconfigure any of these settings.
 
 ## Test Mode
 

@@ -14,7 +14,7 @@
     "docs:dev": "vitepress dev docs",
     "docs:build": "vitepress build docs",
     "docs:preview": "vitepress preview docs",
-    "postinstall": "mkdir -p storyformats && ln -sfn ../node_modules/@rohal12/spindle/dist/pkg storyformats/spindle"
+    "postinstall": "bash scripts/postinstall.sh"
   },
   "keywords": [
     "twine",
