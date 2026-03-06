@@ -31,7 +31,7 @@ The easiest starter kit for building [Spindle](https://rohal12.github.io/spindle
 
 1. Clone the repository
    ```
-   npx degit nijikokun/sugarcube-starter <project-name>
+   npx degit rohal12/spindle-starter <project-name>
    ```
 2. Install modules
    ```

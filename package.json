@@ -11,6 +11,9 @@
     "preview": "vite preview",
     "publish:pages": "bash scripts/publish.sh pages",
     "publish:itch": "bash scripts/publish.sh itch",
+    "docs:dev": "vitepress dev docs",
+    "docs:build": "vitepress build docs",
+    "docs:preview": "vitepress preview docs",
     "postinstall": "mkdir -p storyformats && ln -sfn ../node_modules/@rohal12/spindle/dist/pkg storyformats/spindle"
   },
   "keywords": [
@@ -33,6 +36,7 @@
     "sass": "^1.97.3",
     "tsx": "^4.21.0",
     "typescript": "^5.7.2",
-    "vite": "^7.3.1"
+    "vite": "^7.3.1",
+    "vitepress": "^1.6.4"
   }
 }
