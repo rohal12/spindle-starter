@@ -1,10 +1,6 @@
 #!/usr/bin/env bash
 set -euo pipefail
 
-# Link the Spindle story format so the compiler can find it
-mkdir -p storyformats
-ln -sfn ../node_modules/@rohal12/spindle/dist/pkg storyformats/spindle
-
 # If there's no .git directory, this is a fresh degit clone.
 # Remove template-only files that aren't needed for user projects.
 if [ ! -d ".git" ]; then

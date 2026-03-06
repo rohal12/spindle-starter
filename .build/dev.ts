@@ -54,7 +54,7 @@ async function dev() {
   const tweeAbort = await tweeWatch({
     sources: ["src/story"],
     outFile: "dist/index.html",
-    formatPaths: [resolve(cwd, "storyformats")],
+    formatPaths: [resolve(cwd, "node_modules/@rohal12/spindle/dist")],
     modules: ["dist/styles/app.bundle.css", "dist/scripts/app.bundle.js"],
     headFile: "src/head-content.html",
     testMode: true,

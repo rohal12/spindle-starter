@@ -9,7 +9,7 @@ function spindlePlugin(): Plugin {
       await compileToFile({
         sources: ["src/story"],
         outFile: "dist/index.html",
-        formatPaths: [resolve(import.meta.dirname!, "storyformats")],
+        formatPaths: [resolve(import.meta.dirname!, "node_modules/@rohal12/spindle/dist")],
         modules: ["dist/styles/app.bundle.css", "dist/scripts/app.bundle.js"],
         headFile: "src/head-content.html",
         testMode: process.env.NODE_ENV !== "production",
