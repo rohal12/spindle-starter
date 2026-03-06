@@ -1,0 +1,32 @@
+name: Deploy to itch.io
+
+on:
+  workflow_dispatch:
+    inputs:
+      channel:
+        description: "Butler channel"
+        required: false
+        default: "html5"
+
+jobs:
+  deploy:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+
+      - uses: actions/setup-node@v4
+        with:
+          node-version: 22
+          cache: npm
+
+      - run: npm ci
+
+      - run: npm run build
+        env:
+          NODE_ENV: production
+
+      - uses: remarkablegames/setup-butler@v1
+
+      - run: butler push dist/ "${{ vars.ITCH_USER }}/${{ vars.ITCH_GAME }}:${{ inputs.channel }}"
+        env:
+          BUTLER_API_KEY: ${{ secrets.BUTLER_API_KEY }}

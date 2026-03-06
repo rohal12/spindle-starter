@@ -31,7 +31,7 @@ The easiest starter kit for building [Spindle](https://rohal12.github.io/spindle
 
 1. Clone the repository
    ```
-   npx degit nijikokun/sugarcube-starter <project-name>
+   npx degit rohal12/spindle-starter <project-name>
    ```
 2. Install modules
    ```
@@ -50,6 +50,8 @@ The easiest starter kit for building [Spindle](https://rohal12.github.io/spindle
 | `npm run dev` | Same as `npm start` |
 | `npm run build` | Production build to `dist/` |
 | `npm run preview` | Preview production build |
+| `npm run publish:pages` | Deploy to GitHub Pages (via `gh` CLI) |
+| `npm run publish:itch` | Deploy to itch.io (via `butler`) |
 
 ## Directory Structure
 
@@ -118,6 +120,44 @@ Replace `YOUR_TAG_HERE` with your Google Analytics ID.
 
 </p>
 </details>
+
+## Publishing
+
+Both publishing targets are available as GitHub Actions workflows (manual dispatch only) and as CLI scripts.
+
+### GitHub Pages
+
+**GitHub Actions:** A workflow at `.github/workflows/deploy-pages.yml` builds and deploys your story. Trigger it manually from the Actions tab or via CLI:
+
+```
+npm run publish:pages
+```
+
+**Setup:** In your GitHub repo, go to Settings > Pages and set the source to "GitHub Actions". The `npm run publish:pages` command requires the [GitHub CLI](https://cli.github.com) (`gh`).
+
+### itch.io
+
+**GitHub Actions:** A workflow at `.github/workflows/deploy-itch.yml` builds and pushes to itch.io using [butler](https://itch.io/docs/butler/).
+
+**Setup:** Add the following to your GitHub repo:
+- **Secret:** `BUTLER_API_KEY` — your itch.io [API key](https://itch.io/user/settings/api-keys)
+- **Variables:** `ITCH_USER` and `ITCH_GAME` (Settings > Secrets and variables > Actions > Variables)
+
+**CLI:** You can also deploy locally with butler installed:
+
+```
+npm run publish:itch -- --user <your-username> --game <your-game>
+```
+
+Or set environment variables:
+
+```
+export ITCH_USER=your-username
+export ITCH_GAME=your-game
+npm run publish:itch
+```
+
+The default channel is `html5`. Override with `--channel <name>`.
 
 ## Resources
 

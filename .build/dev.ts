@@ -1,8 +1,7 @@
 import { build } from 'vite';
-import chokidar from 'chokidar';
 import { resolve } from 'path';
 import browserSync from 'browser-sync';
-import { compileToFile } from '@rohal12/twee-ts';
+import { watch as tweeWatch } from '@rohal12/twee-ts';
 import fs from 'fs';
 
 // Colors for console output
@@ -30,78 +29,46 @@ function debounce<T extends (...args: any[]) => void>(fn: T, ms: number): T {
     }) as T;
 }
 
-async function compileStory(): Promise<{ success: boolean; error?: string }> {
-    try {
-        await compileToFile({
-            sources: ['src/story'],
-            outFile: 'dist/index.html',
-            formatPaths: [resolve(process.cwd(), 'storyformats')],
-            modules: [
-                'dist/styles/app.bundle.css',
-                'dist/scripts/app.bundle.js',
-            ],
-            headFile: 'src/head-content.html',
-            testMode: true,
-        });
-        log('spindle', c.green, 'Story compiled.');
-        return { success: true };
-    } catch (e: any) {
-        const error = e.message || String(e);
-        log('spindle', c.magenta, `Build failed:\n${error}`);
-        return { success: false, error };
-    }
-}
-
 async function dev() {
     const cwd = process.cwd();
 
-    // Initial build
+    // Initial Vite asset build
     log('dev', c.blue, 'Building...');
-    let initialBuildFailed = false;
     try {
         await build({ configFile: './vite.config.ts', logLevel: 'warn' });
     } catch (e) {
         log('dev', c.magenta, 'Initial build failed, starting server anyway...');
-        initialBuildFailed = true;
     }
 
-    // Ensure fallback index.html exists if compile failed completely
-    const indexHtmlPath = resolve(cwd, 'dist/index.html');
-    if (!fs.existsSync(indexHtmlPath)) {
-        log('dev', c.yellow, 'Generating fallback index.html...');
-        if (!fs.existsSync(resolve(cwd, 'dist'))) fs.mkdirSync(resolve(cwd, 'dist'));
-        fs.writeFileSync(indexHtmlPath, `
-<!DOCTYPE html>
-<html>
-<head>
-  <meta charset="utf-8">
-  <title>Build Error</title>
-  <link rel="stylesheet" href="styles/app.bundle.css">
-  <style>body { background: #111; color: #888; font-family: sans-serif; padding: 2rem; }</style>
-</head>
-<body>
-  <h2>Build Failed</h2>
-  <p>Check the console for details.</p>
-  <script type="module" src="scripts/app.bundle.js"></script>
-</body>
-</html>`);
-        initialBuildFailed = true;
-    }
+    // Ensure dist directory exists
+    if (!fs.existsSync(resolve(cwd, 'dist'))) fs.mkdirSync(resolve(cwd, 'dist'));
 
     // Start browser-sync
     const bs = browserSync.create();
 
-    // Debounced rebuild functions
-    const rebuildStory = debounce(async () => {
-        const result = await compileStory();
-        if (result.success) {
-            bs.reload();
-        }
-    }, 100);
-
     const rebuildAssets = debounce(() => {
         bs.reload();
     }, 100);
+
+    // Start twee-ts incremental watcher
+    const tweeAbort = await tweeWatch({
+        sources: ['src/story'],
+        outFile: 'dist/index.html',
+        formatPaths: [resolve(cwd, 'storyformats')],
+        modules: [
+            'dist/styles/app.bundle.css',
+            'dist/scripts/app.bundle.js',
+        ],
+        headFile: 'src/head-content.html',
+        testMode: true,
+        onBuild: (result) => {
+            log('spindle', c.green, `Story compiled. (${result.stats.passages} passages, ${result.stats.words} words)`);
+            bs.reload();
+        },
+        onError: (error) => {
+            log('spindle', c.magenta, `Build failed:\n${error.message}`);
+        },
+    });
 
     await new Promise<void>((resolve) => {
         bs.init({
@@ -117,35 +84,9 @@ async function dev() {
             ],
         }, () => {
             log('server', c.green, 'http://localhost:4321');
-            if (initialBuildFailed) {
-                setTimeout(rebuildStory, 1000);
-            }
             resolve();
         });
     });
-
-    // Watch patterns
-    const watchPaths = [
-        resolve(cwd, 'src/story'),           // .twee files
-        resolve(cwd, 'src/head-content.html'), // head content
-    ];
-
-    log('watch', c.cyan, `Watching: ${watchPaths.map(p => p.replace(cwd, '.')).join(', ')}`);
-
-    const tweeWatcher = chokidar.watch(watchPaths, {
-        ignored: /(^|[\/\\])\../,
-        persistent: true,
-        usePolling: true,
-        interval: 300,
-    });
-
-    tweeWatcher
-        .on('ready', () => log('watch', c.cyan, 'Ready'))
-        .on('change', (path) => {
-            log('change', c.yellow, path.replace(cwd, '.'));
-            rebuildStory();
-        })
-        .on('error', (err) => log('error', c.magenta, String(err)));
 
     // Watch JS/CSS with Vite
     log('vite', c.magenta, 'Watching assets...\n');
@@ -164,7 +105,7 @@ async function dev() {
     // Graceful shutdown
     const cleanup = () => {
         log('dev', c.blue, 'Shutting down...');
-        tweeWatcher.close();
+        tweeAbort.abort();
         bs.exit();
         process.exit(0);
     };
