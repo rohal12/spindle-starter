@@ -11,15 +11,15 @@ Then reference them in your SCSS with a `@font-face` declaration:
 ```scss
 // src/assets/app/styles/index.scss
 @font-face {
-  font-family: 'MyFont';
-  src: url('../../fonts/MyFont.woff2') format('woff2');
+  font-family: "MyFont";
+  src: url("../../fonts/MyFont.woff2") format("woff2");
   font-weight: normal;
   font-style: normal;
   font-display: swap;
 }
 
 body {
-  font-family: 'MyFont', serif;
+  font-family: "MyFont", serif;
 }
 ```
 
@@ -58,7 +58,7 @@ In stylesheets, use a path relative to the SCSS file:
 
 ```scss
 .header {
-  background-image: url('../../media/banner.jpg');
+  background-image: url("../../media/banner.jpg");
 }
 ```
 

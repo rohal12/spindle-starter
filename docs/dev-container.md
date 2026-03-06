@@ -46,12 +46,14 @@ If you prefer working locally but want the containerized environment:
 ### Steps
 
 1. Clone the repository:
+
    ```sh
    npx degit rohal12/spindle-starter my-story
    cd my-story
    ```
 
 2. Open the folder in VS Code:
+
    ```sh
    code .
    ```
@@ -69,11 +71,11 @@ The dev server starts on port 4321, which is automatically forwarded to your loc
 
 The Dev Container is configured in `.devcontainer/devcontainer.json`:
 
-| Setting | Value | Purpose |
-|---------|-------|---------|
-| `image` | `mcr.microsoft.com/devcontainers/javascript-node:22` | Node.js 22 base image |
-| `postCreateCommand` | `npm install` | Installs dependencies when the container is created |
-| `forwardPorts` | `[4321]` | Forwards the dev server port |
-| `extensions` | ESLint, Prettier | Pre-installs useful VS Code extensions |
+| Setting             | Value                                                | Purpose                                             |
+| ------------------- | ---------------------------------------------------- | --------------------------------------------------- |
+| `image`             | `mcr.microsoft.com/devcontainers/javascript-node:22` | Node.js 22 base image                               |
+| `postCreateCommand` | `npm install`                                        | Installs dependencies when the container is created |
+| `forwardPorts`      | `[4321]`                                             | Forwards the dev server port                        |
+| `extensions`        | ESLint, Prettier                                     | Pre-installs useful VS Code extensions              |
 
 You can customize this file to add more extensions, environment variables, or other tools you need.

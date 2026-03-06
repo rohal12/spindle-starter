@@ -95,11 +95,11 @@ TypeScript configuration with strict mode enabled. Scoped to `src/assets/app/` s
 
 These are created automatically and should not be edited by hand:
 
-| Path | Description |
-|------|-------------|
-| `dist/` | Compiled output — your publishable story |
+| Path            | Description                                              |
+| --------------- | -------------------------------------------------------- |
+| `dist/`         | Compiled output — your publishable story                 |
 | `storyformats/` | Symlink to the Spindle format (created by `npm install`) |
-| `node_modules/` | Installed dependencies |
+| `node_modules/` | Installed dependencies                                   |
 
 All three are listed in `.gitignore`.
 
@@ -116,11 +116,11 @@ This file is required by every Twine story. It contains metadata that the compil
 }
 ```
 
-| Field | Description |
-|-------|-------------|
-| `ifid` | A unique identifier for your story ([IFID](https://ifdb.org/ifid)). The template includes one — keep it or generate a new UUID. |
-| `format` | The story format to use. Keep this as `spindle`. |
-| `format-version` | The minimum format version. The installed version will be used as long as it satisfies this. |
+| Field            | Description                                                                                                                     |
+| ---------------- | ------------------------------------------------------------------------------------------------------------------------------- |
+| `ifid`           | A unique identifier for your story ([IFID](https://ifdb.org/ifid)). The template includes one — keep it or generate a new UUID. |
+| `format`         | The story format to use. Keep this as `spindle`.                                                                                |
+| `format-version` | The minimum format version. The installed version will be used as long as it satisfies this.                                    |
 
 ::: warning
 Don't delete `StoryData.twee` — the compiler needs it to know which story format to use.

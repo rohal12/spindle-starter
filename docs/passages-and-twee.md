@@ -26,11 +26,11 @@ You wake up in a dark room.
 [[Check your pockets->Inventory]]
 ```
 
-| Syntax | Display Text | Goes To |
-|--------|-------------|---------|
-| `[[Look around]]` | Look around | Look around |
-| `[[Open the door\|Hallway]]` | Open the door | Hallway |
-| `[[Check your pockets->Inventory]]` | Check your pockets | Inventory |
+| Syntax                              | Display Text       | Goes To     |
+| ----------------------------------- | ------------------ | ----------- |
+| `[[Look around]]`                   | Look around        | Look around |
+| `[[Open the door\|Hallway]]`        | Open the door      | Hallway     |
+| `[[Check your pockets->Inventory]]` | Check your pockets | Inventory   |
 
 The first form uses the passage name as the link text. The other two let you show different text than the passage you're linking to.
 
@@ -49,13 +49,13 @@ Tags are useful for categorization and can be used by the story format for speci
 
 Some passage names have special meaning:
 
-| Passage | Purpose |
-|---------|---------|
-| `StoryTitle` | The title shown in the browser tab and story UI |
-| `StoryData` | JSON metadata (IFID, format, format-version) |
-| `Start` | The first passage the reader sees (default) |
+| Passage          | Purpose                                         |
+| ---------------- | ----------------------------------------------- |
+| `StoryTitle`     | The title shown in the browser tab and story UI |
+| `StoryData`      | JSON metadata (IFID, format, format-version)    |
+| `Start`          | The first passage the reader sees (default)     |
 | `StoryVariables` | Declares all story variables and their defaults |
-| `StoryInterface` | Customizes the page layout |
+| `StoryInterface` | Customizes the page layout                      |
 
 ```txt
 :: StoryTitle

@@ -15,7 +15,7 @@ Open `src/assets/app/styles/index.scss` and add your CSS:
 body {
   background: #1a1a2e;
   color: #eee;
-  font-family: 'Georgia', serif;
+  font-family: "Georgia", serif;
 }
 
 // Style links
@@ -61,9 +61,9 @@ You can split your styles across multiple files and import them:
 
 ```scss
 // src/assets/app/styles/index.scss
-@use 'variables';
-@use 'layout';
-@use 'passages';
+@use "variables";
+@use "layout";
+@use "passages";
 ```
 
 ```scss
@@ -119,7 +119,7 @@ npm install some-package
 ```
 
 ```typescript
-import something from 'some-package';
+import something from "some-package";
 ```
 
 ## How the Build Works
