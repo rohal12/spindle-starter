@@ -11,8 +11,6 @@ const DEFAULT_WINDOW = {
   minHeight: 320,
 };
 
-const DESKTOP_TARGETS: Target[] = ['windows', 'macos', 'linux'];
-
 function resolveConfig(config: SpindlePackConfig): Required<SpindlePackConfig> {
   return {
     ...config,

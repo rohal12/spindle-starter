@@ -7,7 +7,7 @@ import {
   readdirSync,
 } from 'fs';
 import { execSync } from 'child_process';
-import { resolve, join } from 'path';
+import { resolve, join, dirname, basename } from 'path';
 import type { BuildContext, Target } from '../types.js';
 
 const TAURI_DIR = resolve(import.meta.dirname!, '../tauri');
@@ -70,7 +70,7 @@ function generateIcons(ctx: BuildContext): void {
 
   console.log('[spindle-pack] Generating app icons...');
   execSync(
-    `npx @tauri-apps/cli@latest icon "${resolve(ctx.config.icon)}"`,
+    `npx @tauri-apps/cli@2 icon "${resolve(ctx.config.icon)}"`,
     { cwd: TAURI_DIR, stdio: 'inherit' }
   );
 }
@@ -129,10 +129,10 @@ function collectOutput(target: Target, outputPath: string, ctx: BuildContext): v
       break;
 
     case 'macos':
-      // Zip the .app directory for distribution
+      // Zip the .app directory with relative paths for clean extraction
       execSync(
-        `zip -r "${join(targetDir, `${storyName}.app.zip`)}" "${outputPath}"`,
-        { stdio: 'inherit' }
+        `zip -r "${join(targetDir, `${storyName}.app.zip`)}" "${basename(outputPath)}"`,
+        { cwd: dirname(outputPath), stdio: 'inherit' }
       );
       break;
 
@@ -153,7 +153,7 @@ export async function buildTauri(target: Target, ctx: BuildContext): Promise<voi
   const bundleFlag = getBundleFlag(target);
 
   // Build the binary without bundling first
-  execSync('npx @tauri-apps/cli@latest build --no-bundle', {
+  execSync('npx @tauri-apps/cli@2 build --no-bundle', {
     cwd: TAURI_DIR,
     stdio: 'inherit',
     env: { ...process.env },
@@ -162,7 +162,7 @@ export async function buildTauri(target: Target, ctx: BuildContext): Promise<voi
   // For macOS and Linux, run the bundler to produce .app / .AppImage
   // For Windows, skip bundling — we use the portable .exe directly
   if (bundleFlag) {
-    execSync(`npx @tauri-apps/cli@latest bundle --bundles ${bundleFlag}`, {
+    execSync(`npx @tauri-apps/cli@2 bundle --bundles ${bundleFlag}`, {
       cwd: TAURI_DIR,
       stdio: 'inherit',
       env: { ...process.env },

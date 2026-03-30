@@ -1,5 +1,5 @@
-import { createWriteStream, mkdirSync, readdirSync, statSync } from 'fs';
-import { join, relative } from 'path';
+import { createWriteStream, mkdirSync } from 'fs';
+import { join } from 'path';
 import archiver from 'archiver';
 import type { BuildContext } from '../types.js';
 
