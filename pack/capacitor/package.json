@@ -1,0 +1,10 @@
+{
+  "name": "spindle-story-android",
+  "private": true,
+  "type": "module",
+  "dependencies": {
+    "@capacitor/android": "^7.0.0",
+    "@capacitor/cli": "^7.0.0",
+    "@capacitor/core": "^7.0.0"
+  }
+}
