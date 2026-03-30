@@ -6,3 +6,12 @@ docs/.vitepress/cache
 .claude
 .prebuilt
 .vscode
+
+# Pack build artifacts
+pack/tauri/src-tauri/target
+pack/tauri/web-assets
+pack/capacitor/node_modules
+pack/capacitor/web-assets
+pack/capacitor/android/app/build
+pack/capacitor/android/.gradle
+dist/pack
