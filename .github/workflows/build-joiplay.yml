@@ -1,0 +1,39 @@
+name: Build JoiPlay Package
+
+on:
+  workflow_dispatch:
+  release:
+    types: [published]
+
+jobs:
+  build:
+    runs-on: ubuntu-latest
+
+    steps:
+      - uses: actions/checkout@v4
+
+      - uses: actions/setup-node@v4
+        with:
+          node-version: 22
+
+      - run: npm install
+
+      - name: Build story and package for JoiPlay
+        run: npx vite build
+        env:
+          NODE_ENV: production
+          SPINDLE_PACK_TARGETS: joiplay
+
+      - uses: actions/upload-artifact@v4
+        with:
+          name: joiplay-zip
+          path: dist/pack/joiplay/
+
+      - name: Attach to release
+        if: github.event_name == 'release'
+        env:
+          GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+        run: |
+          for file in dist/pack/joiplay/*.zip; do
+            gh release upload "${{ github.event.release.tag_name }}" "$file" --clobber
+          done

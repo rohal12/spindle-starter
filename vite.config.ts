@@ -2,6 +2,20 @@ import { defineConfig, type Plugin } from "vite";
 import { resolve } from "path";
 import { compileToFile } from "@rohal12/twee-ts";
 
+// To enable single-file executable packaging, uncomment and configure:
+//
+// import { spindlePack } from './pack/plugin.js';
+//
+// Then add to the plugins array (AFTER spindlePlugin()):
+//
+// spindlePack({
+//   name: 'My Story',
+//   identifier: 'com.author.mystory',
+//   icon: 'src/assets/media/icon.png',
+//   version: '1.0.0',
+//   targets: ['windows', 'macos', 'linux', 'android', 'joiplay'],
+// })
+
 function spindlePlugin(): Plugin {
   return {
     name: "vite-plugin-spindle",

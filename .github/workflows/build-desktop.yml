@@ -1,0 +1,61 @@
+name: Build Desktop Executables
+
+on:
+  workflow_dispatch:
+  release:
+    types: [published]
+
+jobs:
+  build:
+    strategy:
+      fail-fast: false
+      matrix:
+        include:
+          - os: windows-latest
+            target: windows
+            artifact: dist/pack/windows/
+          - os: macos-latest
+            target: macos
+            artifact: dist/pack/macos/
+          - os: ubuntu-latest
+            target: linux
+            artifact: dist/pack/linux/
+
+    runs-on: ${{ matrix.os }}
+
+    steps:
+      - uses: actions/checkout@v4
+
+      - uses: actions/setup-node@v4
+        with:
+          node-version: 22
+
+      - uses: dtolnay/rust-toolchain@stable
+
+      - name: Install Linux dependencies
+        if: matrix.os == 'ubuntu-latest'
+        run: |
+          sudo apt-get update
+          sudo apt-get install -y libwebkit2gtk-4.1-dev libappindicator3-dev librsvg2-dev patchelf
+
+      - run: npm install
+
+      - name: Build story and package for ${{ matrix.target }}
+        run: npx vite build
+        env:
+          NODE_ENV: production
+          SPINDLE_PACK_TARGETS: ${{ matrix.target }}
+
+      - uses: actions/upload-artifact@v4
+        with:
+          name: desktop-${{ matrix.target }}
+          path: ${{ matrix.artifact }}
+
+      - name: Attach to release
+        if: github.event_name == 'release'
+        env:
+          GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+        run: |
+          for file in ${{ matrix.artifact }}*; do
+            gh release upload "${{ github.event.release.tag_name }}" "$file" --clobber
+          done
