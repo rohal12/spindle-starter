@@ -1,6 +1,7 @@
 import { defineConfig, type Plugin } from "vite";
 import { resolve } from "path";
 import { compileToFile } from "@rohal12/twee-ts";
+import { spindlePublish } from "./publish/plugin.js";
 
 // To enable single-file executable packaging, uncomment and configure:
 //
@@ -60,5 +61,11 @@ export default defineConfig({
   css: { devSourcemap: true },
   preview: { port: 4321 },
 
-  plugins: [spindlePlugin()],
+  plugins: [
+    spindlePlugin(),
+    // Activated via SPINDLE_PUBLISH env var (see publish:pages / publish:itch scripts)
+    spindlePublish({
+      // itch: { user: 'myname', game: 'my-story' },
+    }),
+  ],
 });
