@@ -4,6 +4,8 @@
 
 - Fix fonts and images referenced from SCSS using absolute `/...` URLs, which broke on GitHub Pages project sites and JoiPlay
 - Fix your stylesheet loading before Spindle's own styles, so rules like `body { font-family: ... }` were overridden; it's now added as a story stylesheet
+- Add [spindle-starter-demo](https://github.com/rohal12/spindle-starter-demo): a demo story built from the template on every push to `main` and every release, with a web version and downloadable builds
+- The template repo's own build workflows skip themselves; the demo repo builds the binaries
 
 ## 2.2.0
 

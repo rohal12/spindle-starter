@@ -4,11 +4,11 @@ set -euo pipefail
 # If there's no .git directory, this is a fresh degit clone.
 # Remove template-only files that aren't needed for user projects.
 if [ ! -d ".git" ]; then
-  rm -rf docs .github/workflows/deploy-docs.yml CHANGELOG.md
+  rm -rf docs .github/workflows/deploy-docs.yml .github/workflows/trigger-demo.yml CHANGELOG.md
 
   # Remove docs-only dependencies and scripts
   npm pkg delete scripts.docs:dev scripts.docs:build scripts.docs:preview 2>/dev/null || true
   npm pkg delete devDependencies.vitepress 2>/dev/null || true
 
-  echo "Cleaned up template-only files (docs, deploy-docs workflow, changelog)."
+  echo "Cleaned up template-only files (docs, deploy-docs and trigger-demo workflows, changelog)."
 fi

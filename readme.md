@@ -6,6 +6,8 @@ The easiest starter kit for building [Spindle](https://rohal12.github.io/spindle
 
 **[Read the full documentation](https://rohal12.github.io/spindle-starter/)**
 
+**[Try the live demo](https://rohal12.github.io/spindle-starter-demo/)**, or download it for [Windows, macOS, Linux, Android and JoiPlay](https://github.com/rohal12/spindle-starter-demo/releases).
+
 ## Features
 
 - No binary downloads — pure npm packages

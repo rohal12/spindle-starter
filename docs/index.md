@@ -13,6 +13,9 @@ hero:
       text: Project Structure
       link: /project-structure
     - theme: alt
+      text: Live Demo
+      link: https://rohal12.github.io/spindle-starter-demo/
+    - theme: alt
       text: GitHub
       link: https://github.com/rohal12/spindle-starter
 

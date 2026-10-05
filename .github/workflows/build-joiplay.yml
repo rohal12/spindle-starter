@@ -10,6 +10,8 @@ permissions:
 
 jobs:
   build:
+    # The template itself has spindlePack disabled; rohal12/spindle-starter-demo builds the binaries
+    if: github.repository != 'rohal12/spindle-starter'
     runs-on: ubuntu-latest
 
     steps:
