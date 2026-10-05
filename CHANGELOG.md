@@ -1,7 +1,9 @@
 # Changelog
 
-## Unreleased
+## 2.2.0
 
+- Add `spindlePack` Vite plugin (opt-in) for desktop (Tauri), Android (Capacitor) and JoiPlay builds, with GitHub Actions workflows
+- Replace `scripts/publish.sh` with the `spindlePublish` Vite plugin
 - Update dependencies: `@rohal12/spindle` 0.3.1 → 0.51.0, `@rohal12/twee-ts` 1.1.2 → 1.17.0
 - Add `@rohal12/spindle-lsp` 0.9.2 and an `npm run lint` script for story files; the deploy workflows run it before building
 - Fix `npm run dev` building with `NODE_ENV=production` after the first rebuild (test mode off, no sourcemaps)

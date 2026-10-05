@@ -1,6 +1,6 @@
 {
   "name": "spindle-starter",
-  "version": "2.0.0",
+  "version": "2.2.0",
   "description": "Modern Starter kit for Spindle",
   "main": "index.js",
   "type": "module",
