@@ -1,5 +1,12 @@
 # Changelog
 
+## Unreleased
+
+- Fix fonts and images referenced from SCSS using absolute `/...` URLs, which broke on GitHub Pages project sites and JoiPlay
+- Fix your stylesheet loading before Spindle's own styles, so rules like `body { font-family: ... }` were overridden; it's now added as a story stylesheet, ahead of any `[stylesheet]` passages (so those still override it). `@import` belongs in your SCSS: in a stylesheet passage it is no longer at the top and is ignored
+- Add [spindle-starter-demo](https://github.com/rohal12/spindle-starter-demo): a demo story built from the template on every push to `main` and every release, with a web version and downloadable builds
+- The template repo's own build workflows skip themselves; the demo repo builds the binaries
+
 ## 2.2.0
 
 - Add `spindlePack` Vite plugin (opt-in) for desktop (Tauri), Android (Capacitor) and JoiPlay builds, with GitHub Actions workflows

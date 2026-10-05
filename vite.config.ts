@@ -28,10 +28,15 @@ function spindlePlugin(): Plugin {
       sequential: true,
       async handler() {
         await compileToFile({
-          sources: ["src/story"],
+          // The CSS bundle goes in as a story stylesheet so Spindle applies it
+          // after its own styles; as a <head> module it would load first and
+          // lose to the format's rules (e.g. body font-family). It's listed
+          // first so its @imports stay at the top and stylesheet passages
+          // can still override it.
+          sources: ["dist/styles/app.bundle.css", "src/story"],
           outFile: "dist/index.html",
           formatPaths: [resolve(import.meta.dirname!, "node_modules/@rohal12/spindle/dist")],
-          modules: ["dist/styles/app.bundle.css", "dist/scripts/app.bundle.js"],
+          modules: ["dist/scripts/app.bundle.js"],
           headFile: "src/head-content.html",
           testMode: process.env.NODE_ENV !== "production",
         });
@@ -81,6 +86,10 @@ export default defineConfig({
   },
 
   css: { devSourcemap: true },
+  // Emit asset URLs (fonts, images referenced from SCSS) relative to
+  // index.html. The CSS is inlined there, so Vite's default absolute
+  // "/fonts/..." would break on GitHub Pages project sites and file://.
+  experimental: { renderBuiltUrl: (filename) => filename },
   preview: { port: 4321 },
 
   plugins: [

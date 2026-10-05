@@ -1,0 +1,31 @@
+name: Trigger demo build
+
+# Builds rohal12/spindle-starter-demo against this commit or release.
+# Needs the DEMO_DISPATCH_TOKEN secret (fine-grained PAT for
+# rohal12/spindle-starter-demo with Contents: read and write).
+
+on:
+  push:
+    branches: [main]
+  release:
+    types: [published]
+
+jobs:
+  dispatch:
+    if: github.repository == 'rohal12/spindle-starter'
+    runs-on: ubuntu-latest
+    steps:
+      - name: Dispatch to spindle-starter-demo
+        env:
+          GH_TOKEN: ${{ secrets.DEMO_DISPATCH_TOKEN }}
+          EVENT_TYPE: ${{ github.event_name == 'release' && 'starter-release' || 'starter-main' }}
+          REF: ${{ github.event_name == 'release' && github.event.release.tag_name || github.sha }}
+        run: |
+          if [ -z "$GH_TOKEN" ]; then
+            echo "::notice::DEMO_DISPATCH_TOKEN is not set, skipping the demo build"
+            exit 0
+          fi
+          gh api repos/rohal12/spindle-starter-demo/dispatches \
+            -f event_type="$EVENT_TYPE" \
+            -f "client_payload[ref]=$REF"
+          echo "Dispatched $EVENT_TYPE for $REF"
