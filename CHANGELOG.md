@@ -1,5 +1,10 @@
 # Changelog
 
+## Unreleased
+
+- Update dependencies: `@rohal12/spindle` 0.17.0 → 0.51.0, `@rohal12/twee-ts` 1.13.0 → 1.17.0
+- Add `@rohal12/spindle-lsp` 0.9.2 and an `npm run lint` script for story files
+
 ## 2.1.0
 
 - Update dependencies: `@rohal12/spindle` 0.3.0 → 0.3.1, `@rohal12/twee-ts` 1.1.1 → 1.1.2

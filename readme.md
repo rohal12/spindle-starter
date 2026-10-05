@@ -20,6 +20,7 @@ The easiest starter kit for building [Spindle](https://rohal12.github.io/spindle
 
 - [Spindle](https://rohal12.github.io/spindle/) — Preact-based Twine story format
 - [twee-ts](https://github.com/rohal12/twee-ts) — TypeScript Twee compiler
+- [spindle-lsp](https://github.com/rohal12/spindle-lsp) — Language server and linter for Spindle
 - [Vite](https://vitejs.dev/) — Fast build tooling
 - [TypeScript](https://www.typescriptlang.org/)
 - [Sass](https://sass-lang.com/) with [Modern CSS Support](https://github.com/csstools/postcss-preset-env#readme)
@@ -52,6 +53,7 @@ The easiest starter kit for building [Spindle](https://rohal12.github.io/spindle
 | `npm run dev`           | Same as `npm start`                       |
 | `npm run build`         | Production build to `dist/`               |
 | `npm run preview`       | Preview production build                  |
+| `npm run lint`          | Lint story files with `spindle-lsp`       |
 | `npm run publish:pages` | Deploy to GitHub Pages (via `gh` CLI)     |
 | `npm run publish:itch`  | Deploy to itch.io (via `butler`)          |
 
