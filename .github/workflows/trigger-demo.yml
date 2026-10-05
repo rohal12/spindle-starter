@@ -10,6 +10,9 @@ on:
   release:
     types: [published]
 
+# The dispatch uses DEMO_DISPATCH_TOKEN, not GITHUB_TOKEN
+permissions: {}
+
 jobs:
   dispatch:
     if: github.repository == 'rohal12/spindle-starter'
