@@ -10,8 +10,12 @@ docs/.vitepress/cache
 # Pack build artifacts
 pack/tauri/src-tauri/target
 pack/tauri/web-assets
+pack/tauri/pack.conf.json
+pack/tauri/src-tauri/icons
+pack/tauri/src-tauri/gen
 pack/capacitor/node_modules
 pack/capacitor/web-assets
 pack/capacitor/android/app/build
 pack/capacitor/android/.gradle
 dist/pack
+pack/tauri/src-tauri/Cargo.lock

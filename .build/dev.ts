@@ -4,6 +4,10 @@ import browserSync from "browser-sync";
 import { watch as tweeWatch } from "@rohal12/twee-ts";
 import fs from "fs";
 
+// Vite's build() sets NODE_ENV to "production" when it is unset, which would
+// disable test mode, sourcemaps and unminified CSS for every rebuild below.
+process.env.NODE_ENV ??= "development";
+
 // Colors for console output
 const c = {
   reset: "\x1b[0m",

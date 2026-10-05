@@ -5,9 +5,17 @@ on:
   release:
     types: [published]
 
+permissions:
+  contents: write # needed to attach files to the release
+
 jobs:
   build:
     runs-on: ubuntu-latest
+
+    # Job-level so the step `if` below can see it (a step's own env isn't
+    # available to its `if`, and the secrets context isn't allowed there)
+    env:
+      KEYSTORE_BASE64: ${{ secrets.KEYSTORE_BASE64 }}
 
     steps:
       - uses: actions/checkout@v4
@@ -28,8 +36,6 @@ jobs:
 
       - name: Decode keystore
         if: env.KEYSTORE_BASE64 != ''
-        env:
-          KEYSTORE_BASE64: ${{ secrets.KEYSTORE_BASE64 }}
         run: echo "$KEYSTORE_BASE64" | base64 -d > /tmp/release.keystore
 
       - name: Build story and package for Android
@@ -37,7 +43,7 @@ jobs:
         env:
           NODE_ENV: production
           SPINDLE_PACK_TARGETS: android
-          SPINDLE_KEYSTORE_PATH: ${{ secrets.KEYSTORE_BASE64 && '/tmp/release.keystore' || '' }}
+          SPINDLE_KEYSTORE_PATH: ${{ env.KEYSTORE_BASE64 != '' && '/tmp/release.keystore' || '' }}
           SPINDLE_KEYSTORE_PASSWORD: ${{ secrets.KEYSTORE_PASSWORD }}
           SPINDLE_KEY_ALIAS: ${{ secrets.KEY_ALIAS || 'release' }}
           SPINDLE_KEY_PASSWORD: ${{ secrets.KEY_PASSWORD }}

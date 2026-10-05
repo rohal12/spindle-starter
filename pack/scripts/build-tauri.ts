@@ -1,7 +1,7 @@
 import {
   cpSync,
   mkdirSync,
-  readFileSync,
+  rmSync,
   writeFileSync,
   existsSync,
   readdirSync,
@@ -9,9 +9,14 @@ import {
 import { execSync } from 'child_process';
 import { resolve, join, dirname, basename } from 'path';
 import type { BuildContext, Target } from '../types.js';
+import { copyDistAssets } from './copy-dist.js';
 
 const TAURI_DIR = resolve(import.meta.dirname!, '../tauri');
 const SRC_TAURI = join(TAURI_DIR, 'src-tauri');
+/** Generated config overlay, merged over tauri.conf.json via --config (gitignored) */
+const PACK_CONFIG = join(TAURI_DIR, 'pack.conf.json');
+/** Icon used when the configured icon doesn't exist */
+const FALLBACK_ICON = 'src/assets/media/favicon.svg';
 
 function checkPrerequisites(): void {
   try {
@@ -37,42 +42,48 @@ function getBundleFlag(target: Target): string | null {
   }
 }
 
-function updateTauriConfig(ctx: BuildContext): void {
-  const configPath = join(SRC_TAURI, 'tauri.conf.json');
-  const config = JSON.parse(readFileSync(configPath, 'utf-8'));
+/**
+ * Write the story's settings to a separate overlay file instead of editing the
+ * tracked tauri.conf.json. Tauri merges it in via JSON Merge Patch, which
+ * replaces arrays wholesale, so the window entry is written out in full.
+ */
+function writePackConfig(ctx: BuildContext): void {
+  const config = {
+    productName: ctx.config.name,
+    version: ctx.config.version,
+    identifier: ctx.config.identifier,
+    app: {
+      windows: [
+        {
+          title: ctx.config.name,
+          ...ctx.config.window,
+        },
+      ],
+    },
+  };
 
-  config.productName = ctx.config.name;
-  config.version = ctx.config.version;
-  config.identifier = ctx.config.identifier;
-  config.build.frontendDist = join(TAURI_DIR, 'web-assets');
-  config.app.windows[0].title = ctx.config.name;
-  config.app.windows[0].width = ctx.config.window.width;
-  config.app.windows[0].height = ctx.config.window.height;
-  config.app.windows[0].minWidth = ctx.config.window.minWidth;
-  config.app.windows[0].minHeight = ctx.config.window.minHeight;
-
-  writeFileSync(configPath, JSON.stringify(config, null, 2) + '\n');
+  writeFileSync(PACK_CONFIG, JSON.stringify(config, null, 2) + '\n');
 }
 
 function copyWebAssets(ctx: BuildContext): void {
-  const webAssetsDir = join(TAURI_DIR, 'web-assets');
-  mkdirSync(webAssetsDir, { recursive: true });
-  cpSync(ctx.distDir, webAssetsDir, { recursive: true });
+  copyDistAssets(ctx, join(TAURI_DIR, 'web-assets'));
 }
 
+/** Generate src-tauri/icons/, which tauri.conf.json requires for every build. */
 function generateIcons(ctx: BuildContext): void {
-  if (!existsSync(ctx.config.icon)) {
+  let icon = resolve(ctx.projectRoot, ctx.config.icon);
+  if (!existsSync(icon)) {
     console.warn(
-      `[spindle-pack] Icon not found: ${ctx.config.icon}, using Tauri defaults`
+      `[spindle-pack] Icon not found: ${ctx.config.icon}, using ${FALLBACK_ICON}`
     );
-    return;
+    icon = resolve(ctx.projectRoot, FALLBACK_ICON);
   }
 
   console.log('[spindle-pack] Generating app icons...');
-  execSync(
-    `npx @tauri-apps/cli@2 icon "${resolve(ctx.config.icon)}"`,
-    { cwd: TAURI_DIR, stdio: 'inherit' }
-  );
+  execSync(`npx @tauri-apps/cli@2 icon "${icon}"`, {
+    cwd: TAURI_DIR,
+    stdio: 'inherit',
+  });
 }
 
 function findOutput(target: Target, ctx: BuildContext): string {
@@ -128,13 +139,17 @@ function collectOutput(target: Target, outputPath: string, ctx: BuildContext): v
       cpSync(outputPath, join(targetDir, `${storyName}.exe`));
       break;
 
-    case 'macos':
-      // Zip the .app directory with relative paths for clean extraction
-      execSync(
-        `zip -r "${join(targetDir, `${storyName}.app.zip`)}" "${basename(outputPath)}"`,
-        { cwd: dirname(outputPath), stdio: 'inherit' }
-      );
+    case 'macos': {
+      // Zip the .app directory with relative paths for clean extraction.
+      // zip -r adds to an existing archive, so remove any previous one first.
+      const zipPath = join(targetDir, `${storyName}.app.zip`);
+      rmSync(zipPath, { force: true });
+      execSync(`zip -r "${zipPath}" "${basename(outputPath)}"`, {
+        cwd: dirname(outputPath),
+        stdio: 'inherit',
+      });
       break;
+    }
 
     case 'linux':
       cpSync(outputPath, join(targetDir, `${storyName}.AppImage`));
@@ -147,26 +162,29 @@ export async function buildTauri(target: Target, ctx: BuildContext): Promise<voi
 
   checkPrerequisites();
   copyWebAssets(ctx);
-  updateTauriConfig(ctx);
+  writePackConfig(ctx);
   generateIcons(ctx);
 
   const bundleFlag = getBundleFlag(target);
 
   // Build the binary without bundling first
-  execSync('npx @tauri-apps/cli@2 build --no-bundle', {
+  execSync(`npx @tauri-apps/cli@2 build --no-bundle --config "${PACK_CONFIG}"`, {
     cwd: TAURI_DIR,
     stdio: 'inherit',
-    env: { ...process.env },
   });
 
   // For macOS and Linux, run the bundler to produce .app / .AppImage
   // For Windows, skip bundling — we use the portable .exe directly
   if (bundleFlag) {
-    execSync(`npx @tauri-apps/cli@2 bundle --bundles ${bundleFlag}`, {
-      cwd: TAURI_DIR,
-      stdio: 'inherit',
-      env: { ...process.env },
+    // Clear bundles from earlier builds so findOutput can't pick a stale one
+    rmSync(join(SRC_TAURI, 'target', 'release', 'bundle', bundleFlag === 'app' ? 'macos' : bundleFlag), {
+      recursive: true,
+      force: true,
     });
+    execSync(
+      `npx @tauri-apps/cli@2 bundle --bundles ${bundleFlag} --config "${PACK_CONFIG}"`,
+      { cwd: TAURI_DIR, stdio: 'inherit' }
+    );
   }
 
   const outputPath = findOutput(target, ctx);

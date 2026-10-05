@@ -1,5 +1,6 @@
 import { defineConfig, type Plugin } from "vite";
 import { resolve } from "path";
+import { cpSync, existsSync } from "fs";
 import { compileToFile } from "@rohal12/twee-ts";
 import { spindlePublish } from "./publish/plugin.js";
 
@@ -12,7 +13,7 @@ import { spindlePublish } from "./publish/plugin.js";
 // spindlePack({
 //   name: 'My Story',
 //   identifier: 'com.author.mystory',
-//   icon: 'src/assets/media/icon.png',
+//   icon: 'src/assets/media/icon.png', // falls back to favicon.svg if missing
 //   version: '1.0.0',
 //   targets: ['windows', 'macos', 'linux', 'android', 'joiplay'],
 // })
@@ -20,23 +21,44 @@ import { spindlePublish } from "./publish/plugin.js";
 function spindlePlugin(): Plugin {
   return {
     name: "vite-plugin-spindle",
-    async closeBundle() {
-      await compileToFile({
-        sources: ["src/story"],
-        outFile: "dist/index.html",
-        formatPaths: [resolve(import.meta.dirname!, "node_modules/@rohal12/spindle/dist")],
-        modules: ["dist/styles/app.bundle.css", "dist/scripts/app.bundle.js"],
-        headFile: "src/head-content.html",
-        testMode: process.env.NODE_ENV !== "production",
-      });
-      console.log("[spindle] Story compiled.\n");
+    // closeBundle hooks run in parallel by default. Compile the story first and
+    // make later plugins (publish, pack) wait until dist/index.html exists.
+    closeBundle: {
+      order: "pre",
+      sequential: true,
+      async handler() {
+        await compileToFile({
+          sources: ["src/story"],
+          outFile: "dist/index.html",
+          formatPaths: [resolve(import.meta.dirname!, "node_modules/@rohal12/spindle/dist")],
+          modules: ["dist/styles/app.bundle.css", "dist/scripts/app.bundle.js"],
+          headFile: "src/head-content.html",
+          testMode: process.env.NODE_ENV !== "production",
+        });
+        console.log("[spindle] Story compiled.\n");
+      },
+    },
+  };
+}
+
+// Copy src/assets/media/ to dist/media/ so stories and head content can use
+// "media/..." URLs. (Vite's publicDir would copy the files to the dist/ root.)
+function mediaPlugin(): Plugin {
+  const src = resolve(import.meta.dirname!, "src/assets/media");
+  return {
+    name: "vite-plugin-spindle-media",
+    apply: "build",
+    writeBundle() {
+      if (existsSync(src)) {
+        cpSync(src, resolve(import.meta.dirname!, "dist/media"), { recursive: true });
+      }
     },
   };
 }
 
 export default defineConfig({
   root: ".",
-  publicDir: "src/assets/media",
+  publicDir: false,
 
   build: {
     outDir: "dist",
@@ -62,6 +84,7 @@ export default defineConfig({
   preview: { port: 4321 },
 
   plugins: [
+    mediaPlugin(),
     spindlePlugin(),
     // Activated via SPINDLE_PUBLISH env var (see publish:pages / publish:itch scripts)
     spindlePublish({
