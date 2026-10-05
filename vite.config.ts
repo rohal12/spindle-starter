@@ -30,8 +30,10 @@ function spindlePlugin(): Plugin {
         await compileToFile({
           // The CSS bundle goes in as a story stylesheet so Spindle applies it
           // after its own styles; as a <head> module it would load first and
-          // lose to the format's rules (e.g. body font-family).
-          sources: ["src/story", "dist/styles/app.bundle.css"],
+          // lose to the format's rules (e.g. body font-family). It's listed
+          // first so its @imports stay at the top and stylesheet passages
+          // can still override it.
+          sources: ["dist/styles/app.bundle.css", "src/story"],
           outFile: "dist/index.html",
           formatPaths: [resolve(import.meta.dirname!, "node_modules/@rohal12/spindle/dist")],
           modules: ["dist/scripts/app.bundle.js"],

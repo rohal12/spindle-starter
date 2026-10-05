@@ -57,7 +57,7 @@ async function dev() {
   // Start twee-ts incremental watcher
   const tweeAbort = await tweeWatch({
     // CSS as a story stylesheet, so it applies after Spindle's styles (see vite.config.ts)
-    sources: ["src/story", "dist/styles/app.bundle.css"],
+    sources: ["dist/styles/app.bundle.css", "src/story"],
     outFile: "dist/index.html",
     formatPaths: [resolve(cwd, "node_modules/@rohal12/spindle/dist")],
     modules: ["dist/scripts/app.bundle.js"],
