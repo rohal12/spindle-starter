@@ -127,7 +127,7 @@ import something from "some-package";
 When you run `npm start` or `npm run build`:
 
 1. **Vite** bundles `src/assets/app/index.ts` and all its imports into `dist/scripts/app.bundle.js` and `dist/styles/app.bundle.css`
-2. **twee-ts** compiles your `.twee` files into `dist/index.html`, injecting the bundled script and stylesheet into the `<head>`
+2. **twee-ts** compiles your `.twee` files into `dist/index.html`, injecting the bundled script into the `<head>` and adding the bundled stylesheet as a story stylesheet, which Spindle applies after its own styles so your rules take precedence
 
 The development server watches both sides — Vite rebuilds assets on script/style changes, and twee-ts incrementally recompiles on `.twee` file changes.
 

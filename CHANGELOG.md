@@ -1,5 +1,10 @@
 # Changelog
 
+## Unreleased
+
+- Fix fonts and images referenced from SCSS using absolute `/...` URLs, which broke on GitHub Pages project sites and JoiPlay
+- Fix your stylesheet loading before Spindle's own styles, so rules like `body { font-family: ... }` were overridden; it's now added as a story stylesheet
+
 ## 2.2.0
 
 - Add `spindlePack` Vite plugin (opt-in) for desktop (Tauri), Android (Capacitor) and JoiPlay builds, with GitHub Actions workflows
