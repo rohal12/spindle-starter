@@ -15,7 +15,7 @@
     "docs:build": "vitepress build docs",
     "docs:preview": "vitepress preview docs",
     "postinstall": "bash scripts/postinstall.sh",
-    "lint": "spindle-lsp check 'src/story/**/*.{twee,tw}'"
+    "lint": "spindle-lsp check \"src/story/**/*.{twee,tw}\""
   },
   "keywords": [
     "twine",

@@ -84,6 +84,7 @@ Save the file. Your browser should reload automatically and show your changes.
 | `npm run dev`           | Same as `npm start`                       |
 | `npm run build`         | Production build to `dist/`               |
 | `npm run preview`       | Preview the production build locally      |
+| `npm run lint`          | Lint story files with `spindle-lsp`       |
 | `npm run publish:pages` | Deploy to GitHub Pages                    |
 | `npm run publish:itch`  | Deploy to itch.io                         |
 
