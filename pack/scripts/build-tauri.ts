@@ -10,6 +10,7 @@ import { execSync } from 'child_process';
 import { resolve, join, dirname, basename } from 'path';
 import type { BuildContext, Target } from '../types.js';
 import { copyDistAssets } from './copy-dist.js';
+import { tauriIdentifier } from './identifier.js';
 
 const TAURI_DIR = resolve(import.meta.dirname!, '../tauri');
 const SRC_TAURI = join(TAURI_DIR, 'src-tauri');
@@ -51,7 +52,7 @@ function writePackConfig(ctx: BuildContext): void {
   const config = {
     productName: ctx.config.name,
     version: ctx.config.version,
-    identifier: ctx.config.identifier,
+    identifier: tauriIdentifier(ctx.config.identifier),
     app: {
       windows: [
         {

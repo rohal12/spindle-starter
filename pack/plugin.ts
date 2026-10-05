@@ -42,6 +42,9 @@ async function pack(config: Required<SpindlePackConfig>): Promise<void> {
   // Only run in production builds
   if (process.env.NODE_ENV !== 'production') return;
 
+  const targets = resolveTargets(config.targets);
+  if (targets.length === 0) return;
+
   const projectRoot = resolve(import.meta.dirname!, '..');
   const distDir = resolve(projectRoot, 'dist');
   const outDir = resolve(distDir, 'pack');
@@ -55,7 +58,7 @@ async function pack(config: Required<SpindlePackConfig>): Promise<void> {
     outDir,
   };
 
-  for (const target of resolveTargets(config.targets)) {
+  for (const target of targets) {
     try {
       await buildTarget(target, ctx);
     } catch (err) {

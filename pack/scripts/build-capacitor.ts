@@ -9,6 +9,7 @@ import { execSync, execFileSync } from 'child_process';
 import { resolve, join } from 'path';
 import type { BuildContext } from '../types.js';
 import { copyDistAssets } from './copy-dist.js';
+import { androidApplicationId } from './identifier.js';
 
 const CAP_DIR = resolve(import.meta.dirname!, '../capacitor');
 const CAP_CLI = join(CAP_DIR, 'node_modules', '@capacitor', 'cli', 'bin', 'capacitor');
@@ -33,9 +34,9 @@ function checkPrerequisites(): void {
 function buildEnv(ctx: BuildContext): NodeJS.ProcessEnv {
   return {
     ...process.env,
-    SPINDLE_APP_ID: ctx.config.identifier,
+    SPINDLE_APP_ID: androidApplicationId(ctx.config.identifier),
     SPINDLE_APP_NAME: ctx.config.name,
-    ORG_GRADLE_PROJECT_spindleAppId: ctx.config.identifier,
+    ORG_GRADLE_PROJECT_spindleAppId: androidApplicationId(ctx.config.identifier),
     ORG_GRADLE_PROJECT_spindleAppName: escapeAndroidString(ctx.config.name),
     ORG_GRADLE_PROJECT_spindleVersion: ctx.config.version,
   };

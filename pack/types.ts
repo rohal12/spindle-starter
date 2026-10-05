@@ -10,7 +10,10 @@ export interface WindowConfig {
 export interface SpindlePackConfig {
   /** Display name for the app (used in window title, binary name, APK label) */
   name: string;
-  /** Reverse-domain identifier (e.g. 'com.author.mystory') */
+  /**
+   * Reverse-domain identifier (e.g. 'com.author.mystory'). Underscores become
+   * hyphens for desktop builds and hyphens become underscores for Android.
+   */
   identifier: string;
   /** Path to source icon PNG (minimum 1024x1024) */
   icon: string;
