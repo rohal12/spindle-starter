@@ -1,7 +1,7 @@
 # Spindle Starter Demo — Build Test and Public Demo
 
 **Date:** 2026-10-05
-**Status:** Draft, pending review
+**Status:** Approved design (updated during planning: config extension and output check)
 
 ## Goal
 
@@ -28,8 +28,10 @@ spindle-starter-demo/
 │   ├── src/assets/media/         # icon.png (1024×1024) and an image used in a passage
 │   ├── src/assets/fonts/         # one .woff2 font
 │   ├── src/assets/app/           # index.ts + styles/index.scss
-│   └── vite.config.ts            # starter config + spindlePack enabled
+│   └── vite.demo.config.ts       # extends the starter config with spindlePack
 ├── scripts/assemble.sh           # assemble a buildable project from starter@ref + overlay
+├── scripts/check-dist.sh         # assert the web build is complete
+├── scripts/demo-version.sh       # ref → semver version
 ├── .github/workflows/build.yml
 └── README.md
 ```
@@ -61,21 +63,23 @@ The demo story must pass `npm run lint` (`spindle-lsp check`).
 
 ### Vite config
 
-`overlay/vite.config.ts` is the starter's `vite.config.ts` with `spindlePack` enabled:
+`overlay/vite.demo.config.ts` extends the starter's own `vite.config.ts` with `mergeConfig` and adds `spindlePack`:
 
 ```ts
 spindlePack({
   name: 'Spindle Demo',
   identifier: 'com.rohal12.spindledemo',
   icon: 'src/assets/media/icon.png',
-  version: process.env.DEMO_VERSION ?? '0.0.0',
+  version: process.env.DEMO_VERSION || '0.0.0',
   targets: [],
 })
 ```
 
-`targets: []` means nothing is packed unless `SPINDLE_PACK_TARGETS` selects a target, which keeps local `npm run build` fast. `DEMO_VERSION` is set by CI from the starter tag (without the `v`) for releases.
+Pack builds run `npx vite build -c vite.demo.config.ts`. Because it extends rather than replaces the starter's config, changes to the starter's `vite.config.ts` are picked up automatically. If the starter's config stops being a plain config object, or the pack plugin's export changes, the demo build fails. `targets: []` means nothing is packed unless `SPINDLE_PACK_TARGETS` selects a target. `DEMO_VERSION` is set by CI from the starter tag (without the `v`). Refs that aren't version tags use `0.0.0`.
 
-The overlay replaces the whole config file, so changes to the starter's `vite.config.ts` have to be mirrored here. The demo workflow catches the mismatch: the overlay config imports the starter's plugins, so renamed or removed exports fail the build.
+### Output check
+
+`scripts/check-dist.sh` asserts that the web build contains the overlay's passages, the inlined script and font, `dist/media/` and `dist/fonts/`, and relative asset URLs (no `url(/`). The relative-URL check exposed a starter bug: Vite emitted `url(/fonts/...)` into the inlined CSS, which breaks on Pages project sites and `file://`. The starter fixes it with `experimental.renderBuiltUrl` in `vite.config.ts`.
 
 ## CI: `build.yml` in the demo repo
 
@@ -94,7 +98,7 @@ Permissions: `contents: read` by default; `deploy` gets `pages: write` and `id-t
 
 ### Jobs
 
-1. **`web`** (ubuntu): assemble, `npm install`, `npm run lint`, `npm run build` with `NODE_ENV=production` and `SPINDLE_PACK_TARGETS=none`. Upload `dist/` as the Pages artifact. A dependent `deploy` job publishes it with `actions/deploy-pages` when the trigger table says so.
+1. **`web`** (ubuntu): assemble, `npm install`, `npm run lint`, `tsc --noEmit`, `npm run build` with `NODE_ENV=production` and `SPINDLE_PACK_TARGETS=none`, then `scripts/check-dist.sh`. Upload `dist/` as the Pages artifact. A dependent `deploy` job publishes it with `actions/deploy-pages` when the trigger table says so.
 2. **`pack`** (matrix, `fail-fast: false`):
 
    | target | runner | extra setup |
@@ -105,7 +109,7 @@ Permissions: `contents: read` by default; `deploy` gets `pages: write` and `id-t
    | android | ubuntu-latest | JDK 21 (Temurin), `android-actions/setup-android@v4` |
    | joiplay | ubuntu-latest | none |
 
-   Each job assembles, runs `npm install`, then `npx vite build` with `NODE_ENV=production` and `SPINDLE_PACK_TARGETS=<target>`. It uploads `dist/pack/<target>/` with `if-no-files-found: error`. Rust jobs use `Swatinem/rust-cache` keyed on `pack/tauri/src-tauri`. Setup steps match the starter's `build-*.yml` workflows, which must be kept in step.
+   Each job assembles, runs `npm install`, then `npx vite build -c vite.demo.config.ts` with `NODE_ENV=production` and `SPINDLE_PACK_TARGETS=<target>`. It uploads `dist/pack/<target>/` with `if-no-files-found: error`. Rust jobs use `Swatinem/rust-cache` keyed on `pack/tauri/src-tauri`. Setup steps match the starter's `build-*.yml` workflows, which must be kept in step.
 3. **`release`** (only for `starter-release`, needs `web` and all `pack` jobs): download all pack artifacts and create a demo release with the starter's tag. Attach the `.exe`, `.app.zip`, `.AppImage`, `.apk` and JoiPlay `.zip`. The release notes link to the starter release.
 
 ### Signing
