@@ -61,7 +61,7 @@ Drop `.woff2`, `.woff`, `.ttf`, or `.otf` font files here. Reference them in you
 
 ### `src/assets/media/`
 
-Static files like images and the favicon. These are copied directly to `dist/` during build. Reference them as `media/filename.png` in your story or head content.
+Static files like images and the favicon. These are copied to `dist/media/` during build. Reference them as `media/filename.png` in your story or head content.
 
 ### `src/assets/vendor/`
 
@@ -112,7 +112,7 @@ This file is required by every Twine story. It contains metadata that the compil
 {
   "ifid": "D674C58C-DEFA-4F70-B7A2-27742230C0FC",
   "format": "spindle",
-  "format-version": "0.2.0"
+  "format-version": "0.51.0"
 }
 ```
 

@@ -31,7 +31,7 @@ Prefer `.woff2` files — they offer the best compression and are supported by a
 
 ## Images and Media
 
-Static files like images, audio, and video go in `src/assets/media/`. These are copied directly to `dist/` during build and served at the root level.
+Static files like images, audio, and video go in `src/assets/media/`. These are copied to `dist/media/` during build, keeping any subdirectories.
 
 ### Referencing from Head Content
 

@@ -4,11 +4,14 @@ android {
     namespace "com.example.spindle_story"
     compileSdk rootProject.ext.compileSdkVersion
     defaultConfig {
-        applicationId "com.example.spindle_story"
+        // spindle* properties are passed in by pack/scripts/build-capacitor.ts
+        applicationId project.findProperty("spindleAppId") ?: "com.example.spindle_story"
         minSdkVersion rootProject.ext.minSdkVersion
         targetSdkVersion rootProject.ext.targetSdkVersion
         versionCode 1
-        versionName "1.0"
+        versionName project.findProperty("spindleVersion") ?: "1.0"
+        resValue "string", "app_name", project.findProperty("spindleAppName") ?: "Spindle Story"
+        resValue "string", "title_activity_main", project.findProperty("spindleAppName") ?: "Spindle Story"
         testInstrumentationRunner "androidx.test.runner.AndroidJUnitRunner"
         aaptOptions {
              // Files and dirs to omit from the packaged assets dir, modified to accommodate modern web apps.

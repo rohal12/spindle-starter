@@ -23,7 +23,7 @@ If your project is already on GitHub:
 npm run publish:pages
 ```
 
-This triggers the GitHub Actions workflow which builds and deploys your story. It requires the [GitHub CLI](https://cli.github.com/) (`gh`) to be installed and authenticated.
+This builds the story locally as a check, then triggers the GitHub Actions workflow, which builds and deploys your story from GitHub on the current branch. Because the deployed version comes from GitHub, the command refuses to run with uncommitted or unpushed changes. It requires the [GitHub CLI](https://cli.github.com/) (`gh`) to be installed and authenticated.
 
 ### Setup
 
@@ -38,9 +38,10 @@ That's it. The workflow at `.github/workflows/deploy-pages.yml` handles the rest
 The workflow (`.github/workflows/deploy-pages.yml`):
 
 1. Checks out your code
-2. Installs dependencies with `npm ci`
-3. Runs `npm run build` with `NODE_ENV=production`
-4. Uploads `dist/` to GitHub Pages
+2. Installs dependencies with `npm install`
+3. Lints the story with `npm run lint`
+4. Runs `npm run build` with `NODE_ENV=production`
+5. Uploads `dist/` to GitHub Pages
 
 It's triggered manually — either from the **Actions** tab in your repo or via `npm run publish:pages`.
 
@@ -53,16 +54,18 @@ It's triggered manually — either from the **Actions** tab in your repo or via 
 With [butler](https://itch.io/docs/butler/) installed locally:
 
 ```sh
-npm run publish:itch -- --user your-username --game your-game
+ITCH_USER=your-username ITCH_GAME=your-game npm run publish:itch
 ```
 
-Or set environment variables to avoid typing them each time:
+Or set the environment variables once per shell session:
 
 ```sh
 export ITCH_USER=your-username
 export ITCH_GAME=your-game
 npm run publish:itch
 ```
+
+You can also set them permanently in `vite.config.ts` with `spindlePublish({ itch: { user: 'your-username', game: 'your-game' } })`. The default channel is `html5`; override it with `ITCH_CHANNEL`.
 
 ### Setup for GitHub Actions
 
@@ -108,7 +111,7 @@ Go to [itch.io/game/new](https://itch.io/game/new) and fill in:
 You don't need to upload anything through the web form. Run your first butler push instead:
 
 ```sh
-npm run publish:itch -- --user your-username --game your-game
+ITCH_USER=your-username ITCH_GAME=your-game npm run publish:itch
 ```
 
 Or trigger the GitHub Actions workflow after setting up `BUTLER_API_KEY`, `ITCH_USER`, and `ITCH_GAME` (see [Setup for GitHub Actions](#setup-for-github-actions) above).

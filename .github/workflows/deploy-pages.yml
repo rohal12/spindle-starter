@@ -24,9 +24,13 @@ jobs:
 
       - run: npm install
 
+      - run: npm run lint
+
       - run: npm run build
         env:
           NODE_ENV: production
+          # Skip desktop/Android/JoiPlay packaging if spindlePack is enabled
+          SPINDLE_PACK_TARGETS: none
 
       - uses: actions/upload-pages-artifact@v3
         with:
