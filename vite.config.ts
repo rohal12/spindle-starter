@@ -89,6 +89,8 @@ export default defineConfig({
   // Emit asset URLs (fonts, images referenced from SCSS) relative to
   // index.html. The CSS is inlined there, so Vite's default absolute
   // "/fonts/..." would break on GitHub Pages project sites and file://.
+  // As a result dist/styles/app.bundle.css only works inlined: loaded on its
+  // own, its url(fonts/...) would resolve against dist/styles/.
   experimental: { renderBuiltUrl: (filename) => filename },
   preview: { port: 4321 },
 

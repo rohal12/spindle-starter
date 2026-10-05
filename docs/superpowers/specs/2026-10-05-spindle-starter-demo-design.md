@@ -88,11 +88,11 @@ Pack builds run `npx vite build -c vite.demo.config.ts`. Because it extends rath
 | Event | Ref built | Pages deploy | Release |
 |---|---|---|---|
 | `repository_dispatch` type `starter-main` (payload `ref` = SHA) | payload ref | yes | no |
-| `repository_dispatch` type `starter-release` (payload `ref` = tag) | payload ref | yes | yes, same tag |
-| `workflow_dispatch` (input `ref`, default `main`) | input ref | no | no |
+| `repository_dispatch` type `starter-release` (payload `ref` = tag) | payload ref | no | yes, same tag (`--prerelease` if the version has a `-` suffix) |
+| `workflow_dispatch` (input `ref`, default `main`; optional `version` override) | input ref | no | no |
 | `push` to demo `main` | starter `main` | yes | no |
 
-Concurrency group per event type and ref. Release runs are never cancelled.
+The Pages site always shows starter `main`. Builds of `main` (starter pushes and demo pushes) share one concurrency group, `demo-main`, so a newer run cancels an older one and the site never goes backwards. Other runs are grouped per event type and ref. Release runs are never cancelled. The decisions are made by `scripts/plan.sh`, which is unit-tested.
 
 Permissions: `contents: read` by default; `deploy` gets `pages: write` and `id-token: write`; `release` gets `contents: write`. The demo repo's Pages source is set to "GitHub Actions".
 
