@@ -3,6 +3,8 @@ import { resolve } from "path";
 import browserSync from "browser-sync";
 import { watch as tweeWatch } from "@rohal12/twee-ts";
 import fs from "fs";
+import { reportDiagnostics } from "./diagnostics.js";
+import { syncMedia } from "./media.js";
 
 // Vite's build() sets NODE_ENV to "production" when it is unset, which would
 // disable test mode, sourcemaps and unminified CSS for every rebuild below.
@@ -33,6 +35,49 @@ function debounce<T extends (...args: any[]) => void>(fn: T, ms: number): T {
   }) as T;
 }
 
+// The author stylesheet (CSS bundle + stylesheet passages) is inlined in
+// index.html, so browser-sync has no linked stylesheet to inject. A build whose
+// HTML differs only in this element is applied in place instead of reloading.
+const STYLESHEET = /<style role="stylesheet" id="twine-user-stylesheet"[^>]*>[\s\S]*?<\/style>/;
+
+function splitStylesheet(html: string): { rest: string; style: string } {
+  return { rest: html.replace(STYLESHEET, ""), style: html.match(STYLESHEET)?.[0] ?? "" };
+}
+
+// Runs in the player (injected by browser-sync, dev only). On a "spindle:css"
+// message it fetches the rebuilt page and swaps the stylesheet Spindle applied
+// at startup, so JS and DOM state survive. If anything looks off it reloads.
+const CSS_UPDATER = `<script>(function () {
+  function stylesheetOf(html) {
+    var el = new DOMParser().parseFromString(html, "text/html")
+      .querySelector('style[role="stylesheet"]');
+    return el ? el.textContent : null;
+  }
+  function fetchStylesheet() {
+    return fetch(location.href, { cache: "no-store" })
+      .then(function (r) { return r.text(); }).then(stylesheetOf);
+  }
+  var current = null;
+  fetchStylesheet().then(function (css) { if (current === null) current = css; });
+  function apply() {
+    fetchStylesheet().then(function (next) {
+      var applied = Array.prototype.find.call(
+        document.head.querySelectorAll("style"),
+        function (s) { return !s.id && s.textContent === current; }
+      );
+      if (next === null || !applied) return location.reload();
+      applied.textContent = next;
+      current = next;
+    });
+  }
+  var timer = setInterval(function () {
+    var bs = window.___browserSync___;
+    if (!bs || !bs.socket) return;
+    clearInterval(timer);
+    bs.socket.on("spindle:css", apply);
+  }, 50);
+})();</script>`;
+
 async function dev() {
   const cwd = process.cwd();
 
@@ -50,26 +95,53 @@ async function dev() {
   // Start browser-sync
   const bs = browserSync.create();
 
-  const rebuildAssets = debounce(() => {
-    bs.reload();
-  }, 100);
+  // Last good build, so a rebuild can tell what changed. The compiler writes
+  // every build, errors or not, so it writes to a scratch file and only a
+  // build without errors replaces dist/index.html.
+  const scratch = resolve(cwd, "node_modules/.cache/spindle-dev/index.html");
+  fs.mkdirSync(resolve(scratch, ".."), { recursive: true });
+  let lastHtml = fs.existsSync(resolve(cwd, "dist/index.html"))
+    ? fs.readFileSync(resolve(cwd, "dist/index.html"), "utf-8")
+    : "";
 
   // Start twee-ts incremental watcher
   const tweeAbort = await tweeWatch({
     // CSS as a story stylesheet, so it applies after Spindle's styles (see vite.config.ts)
     sources: ["dist/styles/app.bundle.css", "src/story"],
-    outFile: "dist/index.html",
+    outFile: scratch,
     formatPaths: [resolve(cwd, "node_modules/@rohal12/spindle/dist")],
     modules: ["dist/scripts/app.bundle.js"],
     headFile: "src/head-content.html",
     testMode: true,
     onBuild: (result) => {
+      const errors = reportDiagnostics(result.diagnostics);
+      if (errors.length > 0) {
+        log(
+          "spindle",
+          c.magenta,
+          `Story has ${errors.length} error(s); keeping the last good build.`,
+        );
+        return;
+      }
+
       log(
         "spindle",
         c.green,
         `Story compiled. (${result.stats.passages} passages, ${result.stats.words} words)`,
       );
-      bs.reload();
+
+      const next = result.output;
+      if (next === lastHtml) return;
+      const before = splitStylesheet(lastHtml);
+      const after = splitStylesheet(next);
+      lastHtml = next;
+      fs.writeFileSync(resolve(cwd, "dist/index.html"), next);
+
+      if (before.rest === after.rest && before.style !== "") {
+        (bs as any).sockets.emit("spindle:css");
+      } else {
+        bs.reload();
+      }
     },
     onError: (error) => {
       log("spindle", c.magenta, `Build failed:\n${error.message}`);
@@ -85,12 +157,8 @@ async function dev() {
         notify: false,
         ui: false,
         logLevel: "silent",
-        files: [
-          // CSS injection (no full reload)
-          {
-            match: "dist/**/*.css",
-            fn: (_event: string, _file: string) => bs.reload("*.css"),
-          },
+        rewriteRules: [
+          { match: /<\/body>/i, fn: (_req: unknown, _res: unknown, match: string) => CSS_UPDATER + match },
         ],
       },
       () => {
@@ -100,20 +168,24 @@ async function dev() {
     );
   });
 
-  // Watch JS/CSS with Vite
+  // Mirror src/assets/media/ into dist/media/ (adds, changes and removals)
+  const mediaDir = resolve(cwd, "src/assets/media");
+  if (fs.existsSync(mediaDir)) {
+    const onMediaChange = debounce(() => {
+      syncMedia(cwd);
+      log("media", c.yellow, "Media updated.");
+      bs.reload();
+    }, 100);
+    fs.watch(mediaDir, { recursive: true }, onMediaChange);
+  }
+
+  // Watch JS/CSS with Vite. The story compiler watches the built bundles, so
+  // rebuilds reach the browser through its onBuild above.
   log("vite", c.magenta, "Watching assets...\n");
   await build({
     configFile: "./vite.config.ts",
     build: { watch: {}, emptyOutDir: false },
     logLevel: "warn",
-    plugins: [
-      {
-        name: "reload-on-build",
-        closeBundle() {
-          rebuildAssets();
-        },
-      },
-    ],
   });
 
   // Graceful shutdown

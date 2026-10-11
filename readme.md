@@ -123,9 +123,17 @@ Paste into [`src/head-content.html`](./src/head-content.html):
   async
   src="https://www.googletagmanager.com/gtag/js?id=YOUR_TAG_HERE"
 ></script>
+<script>
+  window.dataLayer = window.dataLayer || [];
+  function gtag() {
+    dataLayer.push(arguments);
+  }
+  gtag("js", new Date());
+  gtag("config", "YOUR_TAG_HERE");
+</script>
 ```
 
-Replace `YOUR_TAG_HERE` with your Google Analytics ID.
+Replace both occurrences of `YOUR_TAG_HERE` with your Google tag ID (for example `G-XXXXXXXXXX`).
 
 </p>
 </details>

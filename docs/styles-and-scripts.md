@@ -93,11 +93,21 @@ import "./my-module";
 
 ```typescript
 // src/assets/app/my-module.ts
+import { onStoryStartup } from "./startup";
+
 console.log("Story loaded!");
 
-// Access the Spindle Story API
-window.Story; // typed via globals.d.ts
+// The Story API doesn't exist yet while this file first runs
+onStoryStartup((Story) => {
+  Story.on("storyinit", () => console.log("Story initialized"));
+});
 ```
+
+::: warning
+The bundle is inlined into the `<head>` of `index.html` and runs **before** Spindle boots, so `window.Story` is `undefined` at the top level of your code. Wrap anything that uses the Story API in `onStoryStartup()` (from `startup.ts`), which runs your callback once the API exists and before `storyinit` fires.
+:::
+
+The bundle is a single classic script, so dynamic `import()` works (the imported code is folded into the bundle), but `import.meta.url` and separately loaded chunks do not.
 
 ### TypeScript
 

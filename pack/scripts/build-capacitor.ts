@@ -1,19 +1,28 @@
 import {
   cpSync,
   mkdirSync,
+  mkdtempSync,
   rmSync,
   existsSync,
   readdirSync,
+  readFileSync,
+  writeFileSync,
 } from 'fs';
 import { execSync, execFileSync } from 'child_process';
 import { resolve, join } from 'path';
+import { tmpdir } from 'os';
 import type { BuildContext } from '../types.js';
 import { copyDistAssets } from './copy-dist.js';
-import { androidApplicationId } from './identifier.js';
+import { androidApplicationId, artifactName } from './identifier.js';
+import { npx } from './exec.js';
+import { resolveIcon } from './icon.js';
 
 const CAP_DIR = resolve(import.meta.dirname!, '../capacitor');
 const CAP_CLI = join(CAP_DIR, 'node_modules', '@capacitor', 'cli', 'bin', 'capacitor');
-const APK_DIR = join(CAP_DIR, 'android', 'app', 'build', 'outputs', 'apk');
+const ANDROID_DIR = join(CAP_DIR, 'android');
+const APK_DIR = join(ANDROID_DIR, 'app', 'build', 'outputs', 'apk');
+/** Launcher icons generated from the configured icon (gitignored); see android/app/build.gradle */
+const GENERATED_RES = join(ANDROID_DIR, 'app', 'generated-res');
 
 function checkPrerequisites(): void {
   const androidHome = process.env.ANDROID_HOME || process.env.ANDROID_SDK_ROOT;
@@ -56,16 +65,69 @@ function escapeAndroidString(value: string): string {
 }
 
 function installDeps(): void {
-  if (!existsSync(join(CAP_DIR, 'node_modules'))) {
+  // The directory alone proves nothing: an interrupted install leaves it behind
+  // without the CLI, and every later build would fail on the missing file.
+  if (!existsSync(CAP_CLI)) {
     console.log('[spindle-pack] Installing Capacitor dependencies...');
     // No lockfile is committed (package-lock.json is gitignored), so npm ci can't be used
     execSync('npm install --no-audit --no-fund', { cwd: CAP_DIR, stdio: 'inherit' });
+    if (!existsSync(CAP_CLI)) {
+      throw new Error(
+        `[spindle-pack] Capacitor CLI is still missing after installing. ` +
+        `Delete ${join(CAP_DIR, 'node_modules')} and build again.`
+      );
+    }
   }
 }
 
-/** Run the Capacitor CLI without a shell, so arguments (e.g. passwords) are passed verbatim. */
+/** Run the Capacitor CLI without a shell, so arguments are passed verbatim. */
 function cap(args: string[], env: NodeJS.ProcessEnv): void {
   execFileSync(process.execPath, [CAP_CLI, ...args], { cwd: CAP_DIR, stdio: 'inherit', env });
+}
+
+/** Run a Gradle task in the generated Android project. */
+function gradle(task: string, env: NodeJS.ProcessEnv): void {
+  const gradlew = process.platform === 'win32' ? 'gradlew.bat' : './gradlew';
+  execSync(`${gradlew} ${task}`, { cwd: ANDROID_DIR, stdio: 'inherit', env });
+}
+
+/**
+ * Add the save-export bridge (android-export.js) to the copy of index.html
+ * that goes into the app. It needs to run before Spindle does, so it goes at
+ * the start of <head>; dist/index.html itself is left alone.
+ */
+function injectExportBridge(webAssets: string): void {
+  const indexPath = join(webAssets, 'index.html');
+  const script = readFileSync(join(CAP_DIR, 'android-export.js'), 'utf-8');
+  const html = readFileSync(indexPath, 'utf-8');
+  const head = html.match(/<head[^>]*>/i);
+  if (!head) {
+    throw new Error('[spindle-pack] Could not find <head> in index.html to add the Android export bridge.');
+  }
+  // A function replacer, because the script contains `$` sequences
+  writeFileSync(
+    indexPath,
+    html.replace(head[0], () => `${head[0]}<script>${script}</script>`)
+  );
+}
+
+/**
+ * Turn the configured icon into Android launcher resources (all densities plus
+ * the adaptive icon), using the same generator as the desktop builds. They go
+ * to a gitignored directory that build.gradle layers over the template's
+ * placeholder icons, so no tracked file changes.
+ */
+function generateLauncherIcons(ctx: BuildContext): void {
+  console.log('[spindle-pack] Generating Android launcher icons...');
+  rmSync(GENERATED_RES, { recursive: true, force: true });
+
+  const tmp = mkdtempSync(join(tmpdir(), 'spindle-icons-'));
+  try {
+    npx(['@tauri-apps/cli@2', 'icon', resolveIcon(ctx), '--output', tmp], CAP_DIR);
+    cpSync(join(tmp, 'android'), GENERATED_RES, { recursive: true });
+  } finally {
+    rmSync(tmp, { recursive: true, force: true });
+  }
 }
 
 function findApk(buildType: 'debug' | 'release'): string {
@@ -85,6 +147,8 @@ export async function buildCapacitor(ctx: BuildContext): Promise<void> {
   checkPrerequisites();
   installDeps();
   copyDistAssets(ctx, join(CAP_DIR, 'web-assets'));
+  injectExportBridge(join(CAP_DIR, 'web-assets'));
+  generateLauncherIcons(ctx);
 
   const env = buildEnv(ctx);
 
@@ -94,7 +158,10 @@ export async function buildCapacitor(ctx: BuildContext): Promise<void> {
   // Clear APKs from earlier builds so findApk can't pick a stale one
   rmSync(APK_DIR, { recursive: true, force: true });
 
-  // Check for signing config (CI provides these via env vars)
+  // Signing config (CI provides these via env vars). The keystore passwords
+  // are handed to Gradle as ORG_GRADLE_PROJECT_* environment variables that
+  // android/app/build.gradle reads, never as command-line arguments: those end
+  // up in `ps` output and in Node's "Command failed: ..." error message.
   const keystorePath = process.env.SPINDLE_KEYSTORE_PATH;
   const keystorePass = process.env.SPINDLE_KEYSTORE_PASSWORD;
   const keyAlias = process.env.SPINDLE_KEY_ALIAS || 'release';
@@ -102,29 +169,23 @@ export async function buildCapacitor(ctx: BuildContext): Promise<void> {
 
   let buildType: 'debug' | 'release';
   if (keystorePath && keystorePass && keyPass) {
-    // Signed release build
     console.log('[spindle-pack] Building signed release APK...');
-    cap(
-      [
-        'build', 'android',
-        '--keystorepath', keystorePath,
-        '--keystorepass', keystorePass,
-        '--keystorealias', keyAlias,
-        '--keystorealiaspass', keyPass,
-        '--androidreleasetype', 'APK',
-      ],
-      env
-    );
+    gradle('assembleRelease', {
+      ...env,
+      ORG_GRADLE_PROJECT_spindleKeystorePath: resolve(keystorePath),
+      ORG_GRADLE_PROJECT_spindleKeystorePassword: keystorePass,
+      ORG_GRADLE_PROJECT_spindleKeyAlias: keyAlias,
+      ORG_GRADLE_PROJECT_spindleKeyPassword: keyPass,
+    });
     buildType = 'release';
   } else {
-    // Debug build (unsigned, suitable for sideloading)
-    console.log('[spindle-pack] Building debug APK (no keystore configured)...');
-    const gradlew = process.platform === 'win32' ? 'gradlew.bat' : './gradlew';
-    execSync(`${gradlew} assembleDebug`, {
-      cwd: join(CAP_DIR, 'android'),
-      stdio: 'inherit',
-      env,
-    });
+    console.warn(
+      '[spindle-pack] No keystore configured (SPINDLE_KEYSTORE_PATH, SPINDLE_KEYSTORE_PASSWORD): ' +
+      'building a debug APK. Debug builds are signed with a throwaway key, so a later build ' +
+      'cannot be installed over this one without uninstalling the game first, which deletes ' +
+      'its saves. Sign releases with a keystore you keep.'
+    );
+    gradle('assembleDebug', env);
     buildType = 'debug';
   }
 
@@ -133,8 +194,7 @@ export async function buildCapacitor(ctx: BuildContext): Promise<void> {
   const outDir = join(ctx.outDir, 'android');
   mkdirSync(outDir, { recursive: true });
 
-  const storyName = ctx.config.name.replace(/\s+/g, '-');
-  cpSync(apkPath, join(outDir, `${storyName}.apk`));
+  cpSync(apkPath, join(outDir, `${artifactName(ctx.config.name)}.apk`));
 
   console.log('[spindle-pack] Android build complete.');
 }

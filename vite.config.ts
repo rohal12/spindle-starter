@@ -1,8 +1,10 @@
 import { defineConfig, type Plugin } from "vite";
 import { resolve } from "path";
-import { cpSync, existsSync } from "fs";
-import { compileToFile } from "@rohal12/twee-ts";
+import { existsSync, mkdirSync, writeFileSync } from "fs";
+import { compile } from "@rohal12/twee-ts";
 import { spindlePublish } from "./publish/plugin.js";
+import { reportDiagnostics } from "./.build/diagnostics.js";
+import { syncMedia } from "./.build/media.js";
 
 // To enable single-file executable packaging, uncomment and configure:
 //
@@ -27,36 +29,52 @@ function spindlePlugin(): Plugin {
       order: "pre",
       sequential: true,
       async handler() {
-        await compileToFile({
+        const result = await compile({
           // The CSS bundle goes in as a story stylesheet so Spindle applies it
           // after its own styles; as a <head> module it would load first and
           // lose to the format's rules (e.g. body font-family). It's listed
           // first so its @imports stay at the top and stylesheet passages
           // can still override it.
           sources: ["dist/styles/app.bundle.css", "src/story"],
-          outFile: "dist/index.html",
           formatPaths: [resolve(import.meta.dirname!, "node_modules/@rohal12/spindle/dist")],
           modules: ["dist/scripts/app.bundle.js"],
           headFile: "src/head-content.html",
           testMode: process.env.NODE_ENV !== "production",
         });
-        console.log("[spindle] Story compiled.\n");
+
+        // compile() resolves even when the story is broken (for example the
+        // start passage in StoryData does not exist and the compiler falls
+        // back to another one), so the diagnostics have to be checked.
+        const errors = reportDiagnostics(result.diagnostics);
+        if (errors.length > 0 && process.env.NODE_ENV === "production") {
+          throw new Error(
+            `[spindle] The story has ${errors.length} error(s); not writing dist/index.html.`,
+          );
+        }
+
+        // In development a broken story keeps the last good page, if there is one
+        const outFile = resolve(import.meta.dirname!, "dist/index.html");
+        if (errors.length === 0 || !existsSync(outFile)) {
+          mkdirSync(resolve(import.meta.dirname!, "dist"), { recursive: true });
+          writeFileSync(outFile, result.output);
+        }
+        console.log(
+          errors.length > 0
+            ? "[spindle] Story compiled with errors.\n"
+            : "[spindle] Story compiled.\n",
+        );
       },
     },
   };
 }
 
-// Copy src/assets/media/ to dist/media/ so stories and head content can use
-// "media/..." URLs. (Vite's publicDir would copy the files to the dist/ root.)
+// Copy src/assets/media/ to dist/media/ (see .build/media.ts)
 function mediaPlugin(): Plugin {
-  const src = resolve(import.meta.dirname!, "src/assets/media");
   return {
     name: "vite-plugin-spindle-media",
     apply: "build",
     writeBundle() {
-      if (existsSync(src)) {
-        cpSync(src, resolve(import.meta.dirname!, "dist/media"), { recursive: true });
-      }
+      syncMedia(import.meta.dirname!);
     },
   };
 }
@@ -67,13 +85,21 @@ export default defineConfig({
 
   build: {
     outDir: "dist",
+    // With an iife bundle Vite would inject CSS from JS at runtime; a single
+    // extracted file is what the story compiler takes as a stylesheet.
+    cssCodeSplit: false,
     emptyOutDir: !process.argv.includes("--watch"),
-    sourcemap: process.env.NODE_ENV !== "production",
+    // The bundle is inlined into index.html, so an external map could never be
+    // found next to it: embed the map instead.
+    sourcemap: process.env.NODE_ENV !== "production" ? "inline" : false,
     rollupOptions: {
       input: resolve(import.meta.dirname!, "src/assets/app/index.ts"),
       output: {
+        // The bundle ends up in a classic inline <script>, where import,
+        // import.meta and chunk URLs don't work: emit one self-contained
+        // script and fold dynamic import()s into it (iife output does this by itself).
+        format: "iife",
         entryFileNames: "scripts/app.bundle.js",
-        chunkFileNames: "scripts/[name]-[hash].js",
         assetFileNames: (assetInfo) => {
           const name = assetInfo.name || "";
           if (name.endsWith(".css")) return "styles/app.bundle.css";

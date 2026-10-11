@@ -45,6 +45,35 @@ The workflow (`.github/workflows/deploy-pages.yml`):
 
 It's triggered manually — either from the **Actions** tab in your repo or via `npm run publish:pages`.
 
+## Android releases
+
+The Android workflow (`.github/workflows/build-android.yml`) builds an APK with `spindlePack`'s `android` target. Run manually it uploads the APK as a workflow artifact; when you publish a GitHub release it also attaches the APK to that release.
+
+### Exporting saves on Android
+
+The save manager's **Export** button works in the Android app: it opens the system file picker so the player chooses where the save file goes, and shows "Saved" once the file is written (or "Export cancelled"). Spindle's own "Save exported" message appears immediately, whatever the player chooses in the picker. Importing uses the same picker.
+
+### Signing Android releases
+
+Android only installs an update over an existing game if both APKs are signed with the same key. Without a keystore, every build is signed with a throwaway debug key, so players would have to uninstall the game, deleting their saves, to update. The workflow therefore **refuses to build a release without a keystore**; manual runs still produce debug APKs for testing.
+
+Create a keystore once and keep it safe (if you lose it you can never update installed games):
+
+```sh
+keytool -genkeypair -keystore release.keystore -alias release -keyalg RSA -keysize 2048 -validity 10000
+```
+
+Use the same password for the keystore and the key (keytool's default for PKCS12 keystores). Then add these **secrets** under **Settings > Secrets and variables > Actions**:
+
+| Secret              | Value                                                            |
+| ------------------- | ---------------------------------------------------------------- |
+| `KEYSTORE_BASE64`   | The keystore file, base64 encoded (`base64 -w0 release.keystore`) |
+| `KEYSTORE_PASSWORD` | The keystore password                                            |
+| `KEY_ALIAS`         | Optional, defaults to `release`                                  |
+| `KEY_PASSWORD`      | Optional, defaults to the keystore password                      |
+
+For a local build, set `SPINDLE_KEYSTORE_PATH`, `SPINDLE_KEYSTORE_PASSWORD`, and optionally `SPINDLE_KEY_ALIAS` and `SPINDLE_KEY_PASSWORD`. The passwords are handed to Gradle through the environment, not the command line.
+
 ## itch.io
 
 [itch.io](https://itch.io/) is a popular platform for publishing interactive fiction and games.
@@ -65,6 +94,10 @@ export ITCH_GAME=your-game
 npm run publish:itch
 ```
 
+On Windows, use `set ITCH_USER=your-username` and `set ITCH_GAME=your-game` in Command Prompt, or `$env:ITCH_USER = "your-username"` and `$env:ITCH_GAME = "your-game"` in PowerShell.
+
+`npm run publish:itch` builds the story on your machine and uploads it with your local butler. It does not use the GitHub repository variables and secrets described below.
+
 You can also set them permanently in `vite.config.ts` with `spindlePublish({ itch: { user: 'your-username', game: 'your-game' } })`. The default channel is `html5`; override it with `ITCH_CHANNEL`.
 
 ### Setup for GitHub Actions
@@ -77,19 +110,21 @@ To deploy automatically from GitHub:
    - Add a **secret** named `BUTLER_API_KEY` with your API key
    - Add **variables** `ITCH_USER` (your itch.io username) and `ITCH_GAME` (your project's URL slug)
 
-Then trigger the workflow from the **Actions** tab or with:
+Then trigger the workflow from the **Actions** tab or with the [GitHub CLI](https://cli.github.com/):
 
 ```sh
-npm run publish:itch
+gh workflow run deploy-itch.yml
 ```
 
 ### Options
 
-The default butler channel is `html5`. Override it with:
+The default butler channel is `html5`. Override it for a local publish with `--channel`:
 
 ```sh
 npm run publish:itch -- --channel web
 ```
+
+This is the same as setting the `ITCH_CHANNEL` environment variable, or `itch: { channel: 'web' }` in `spindlePublish()`. The GitHub Actions workflow takes a `channel` input instead: `gh workflow run deploy-itch.yml -f channel=web`.
 
 ### Creating Your itch.io Project
 

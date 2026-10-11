@@ -16,6 +16,7 @@ pack/tauri/src-tauri/gen
 pack/capacitor/node_modules
 pack/capacitor/web-assets
 pack/capacitor/android/app/build
+pack/capacitor/android/app/generated-res
 pack/capacitor/android/.gradle
 dist/pack
 pack/tauri/src-tauri/Cargo.lock

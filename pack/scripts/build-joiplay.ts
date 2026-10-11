@@ -2,6 +2,7 @@ import { createWriteStream, mkdirSync } from 'fs';
 import { join } from 'path';
 import archiver from 'archiver';
 import type { BuildContext } from '../types.js';
+import { artifactName } from './identifier.js';
 
 const README_TEXT = `JoiPlay HTML Game
 
@@ -20,7 +21,7 @@ export async function buildJoiPlay(ctx: BuildContext): Promise<void> {
   const outDir = join(ctx.outDir, 'joiplay');
   mkdirSync(outDir, { recursive: true });
 
-  const zipName = `${ctx.config.name.replace(/\s+/g, '-')}-joiplay.zip`;
+  const zipName = `${artifactName(ctx.config.name)}-joiplay.zip`;
   const zipPath = join(outDir, zipName);
 
   console.log(`[spindle-pack] Creating JoiPlay zip: ${zipName}`);
@@ -30,6 +31,7 @@ export async function buildJoiPlay(ctx: BuildContext): Promise<void> {
     const archive = archiver('zip', { zlib: { level: 9 } });
 
     output.on('close', resolve);
+    output.on('error', reject);
     archive.on('error', reject);
 
     archive.pipe(output);

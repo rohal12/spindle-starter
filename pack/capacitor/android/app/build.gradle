@@ -1,5 +1,9 @@
 apply plugin: 'com.android.application'
 
+// Release signing comes from ORG_GRADLE_PROJECT_spindleKeystore* environment
+// variables set by pack/scripts/build-capacitor.ts (kept out of the command line)
+def spindleSigning = project.hasProperty("spindleKeystorePath")
+
 android {
     namespace "com.example.spindle_story"
     compileSdk rootProject.ext.compileSdkVersion
@@ -19,11 +23,30 @@ android {
             ignoreAssetsPattern '!.svn:!.git:!.ds_store:!*.scc:.*:!CVS:!thumbs.db:!picasa.ini:!*~'
         }
     }
+    if (spindleSigning) {
+        signingConfigs {
+            release {
+                storeFile file(project.property("spindleKeystorePath"))
+                storePassword project.property("spindleKeystorePassword")
+                keyAlias project.property("spindleKeyAlias")
+                keyPassword project.property("spindleKeyPassword")
+            }
+        }
+    }
     buildTypes {
         release {
             minifyEnabled false
             proguardFiles getDefaultProguardFile('proguard-android.txt'), 'proguard-rules.pro'
+            if (spindleSigning) {
+                signingConfig signingConfigs.release
+            }
         }
+    }
+    // Launcher icons generated from the configured icon; variant resources
+    // override the template's placeholders in src/main/res
+    sourceSets {
+        debug.res.srcDirs += 'generated-res'
+        release.res.srcDirs += 'generated-res'
     }
 }
 
