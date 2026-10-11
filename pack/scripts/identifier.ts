@@ -10,3 +10,19 @@ export function tauriIdentifier(identifier: string): string {
 export function androidApplicationId(identifier: string): string {
   return identifier.replace(/-/g, '_');
 }
+
+/**
+ * A file name for build artifacts derived from the display name. The display
+ * name may contain anything (`Love/Hate`, `What?`), but the artifact has to
+ * land directly in its target directory with a name every OS accepts.
+ */
+export function artifactName(name: string): string {
+  const safe = name
+    .replace(/[\u0000-\u001f<>:"/\\|?*]/g, '-')
+    .replace(/\s+/g, '-')
+    .replace(/-{2,}/g, '-')
+    .replace(/^[-.]+|[-.]+$/g, '');
+  if (safe === '') return 'story';
+  // Reserved device names on Windows (CON, NUL, COM1, ...)
+  return /^(con|prn|aux|nul|com\d|lpt\d)$/i.test(safe) ? `_${safe}` : safe;
+}

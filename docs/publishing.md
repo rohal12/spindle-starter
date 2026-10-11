@@ -45,6 +45,31 @@ The workflow (`.github/workflows/deploy-pages.yml`):
 
 It's triggered manually — either from the **Actions** tab in your repo or via `npm run publish:pages`.
 
+## Android releases
+
+The Android workflow (`.github/workflows/build-android.yml`) builds an APK with `spindlePack`'s `android` target. Run manually it uploads the APK as a workflow artifact; when you publish a GitHub release it also attaches the APK to that release.
+
+### Signing Android releases
+
+Android only installs an update over an existing game if both APKs are signed with the same key. Without a keystore, every build is signed with a throwaway debug key, so players would have to uninstall the game, deleting their saves, to update. The workflow therefore **refuses to build a release without a keystore**; manual runs still produce debug APKs for testing.
+
+Create a keystore once and keep it safe (if you lose it you can never update installed games):
+
+```sh
+keytool -genkeypair -keystore release.keystore -alias release -keyalg RSA -keysize 2048 -validity 10000
+```
+
+Use the same password for the keystore and the key (keytool's default for PKCS12 keystores). Then add these **secrets** under **Settings > Secrets and variables > Actions**:
+
+| Secret              | Value                                                            |
+| ------------------- | ---------------------------------------------------------------- |
+| `KEYSTORE_BASE64`   | The keystore file, base64 encoded (`base64 -w0 release.keystore`) |
+| `KEYSTORE_PASSWORD` | The keystore password                                            |
+| `KEY_ALIAS`         | Optional, defaults to `release`                                  |
+| `KEY_PASSWORD`      | Optional, defaults to the keystore password                      |
+
+For a local build, set `SPINDLE_KEYSTORE_PATH`, `SPINDLE_KEYSTORE_PASSWORD`, and optionally `SPINDLE_KEY_ALIAS` and `SPINDLE_KEY_PASSWORD`. The passwords are handed to Gradle through the environment, not the command line.
+
 ## itch.io
 
 [itch.io](https://itch.io/) is a popular platform for publishing interactive fiction and games.

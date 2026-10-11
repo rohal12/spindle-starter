@@ -6,18 +6,18 @@ import {
   existsSync,
   readdirSync,
 } from 'fs';
-import { execSync } from 'child_process';
+import { execSync, execFileSync } from 'child_process';
 import { resolve, join, dirname, basename } from 'path';
 import type { BuildContext, Target } from '../types.js';
 import { copyDistAssets } from './copy-dist.js';
-import { tauriIdentifier } from './identifier.js';
+import { tauriIdentifier, artifactName } from './identifier.js';
+import { npx } from './exec.js';
+import { resolveIcon } from './icon.js';
 
 const TAURI_DIR = resolve(import.meta.dirname!, '../tauri');
 const SRC_TAURI = join(TAURI_DIR, 'src-tauri');
 /** Generated config overlay, merged over tauri.conf.json via --config (gitignored) */
 const PACK_CONFIG = join(TAURI_DIR, 'pack.conf.json');
-/** Icon used when the configured icon doesn't exist */
-const FALLBACK_ICON = 'src/assets/media/favicon.svg';
 
 function checkPrerequisites(): void {
   try {
@@ -72,19 +72,8 @@ function copyWebAssets(ctx: BuildContext): void {
 
 /** Generate src-tauri/icons/, which tauri.conf.json requires for every build. */
 function generateIcons(ctx: BuildContext): void {
-  let icon = resolve(ctx.projectRoot, ctx.config.icon);
-  if (!existsSync(icon)) {
-    console.warn(
-      `[spindle-pack] Icon not found: ${ctx.config.icon}, using ${FALLBACK_ICON}`
-    );
-    icon = resolve(ctx.projectRoot, FALLBACK_ICON);
-  }
-
   console.log('[spindle-pack] Generating app icons...');
-  execSync(`npx @tauri-apps/cli@2 icon "${icon}"`, {
-    cwd: TAURI_DIR,
-    stdio: 'inherit',
-  });
+  npx(['@tauri-apps/cli@2', 'icon', resolveIcon(ctx)], TAURI_DIR);
 }
 
 function findOutput(target: Target, ctx: BuildContext): string {
@@ -133,7 +122,7 @@ function collectOutput(target: Target, outputPath: string, ctx: BuildContext): v
   const targetDir = join(ctx.outDir, target);
   mkdirSync(targetDir, { recursive: true });
 
-  const storyName = ctx.config.name.replace(/\s+/g, '-');
+  const storyName = artifactName(ctx.config.name);
 
   switch (target) {
     case 'windows':
@@ -145,7 +134,7 @@ function collectOutput(target: Target, outputPath: string, ctx: BuildContext): v
       // zip -r adds to an existing archive, so remove any previous one first.
       const zipPath = join(targetDir, `${storyName}.app.zip`);
       rmSync(zipPath, { force: true });
-      execSync(`zip -r "${zipPath}" "${basename(outputPath)}"`, {
+      execFileSync('zip', ['-r', zipPath, basename(outputPath)], {
         cwd: dirname(outputPath),
         stdio: 'inherit',
       });
@@ -169,10 +158,7 @@ export async function buildTauri(target: Target, ctx: BuildContext): Promise<voi
   const bundleFlag = getBundleFlag(target);
 
   // Build the binary without bundling first
-  execSync(`npx @tauri-apps/cli@2 build --no-bundle --config "${PACK_CONFIG}"`, {
-    cwd: TAURI_DIR,
-    stdio: 'inherit',
-  });
+  npx(['@tauri-apps/cli@2', 'build', '--no-bundle', '--config', PACK_CONFIG], TAURI_DIR);
 
   // For macOS and Linux, run the bundler to produce .app / .AppImage
   // For Windows, skip bundling — we use the portable .exe directly
@@ -182,10 +168,7 @@ export async function buildTauri(target: Target, ctx: BuildContext): Promise<voi
       recursive: true,
       force: true,
     });
-    execSync(
-      `npx @tauri-apps/cli@2 bundle --bundles ${bundleFlag} --config "${PACK_CONFIG}"`,
-      { cwd: TAURI_DIR, stdio: 'inherit' }
-    );
+    npx(['@tauri-apps/cli@2', 'bundle', '--bundles', bundleFlag, '--config', PACK_CONFIG], TAURI_DIR);
   }
 
   const outputPath = findOutput(target, ctx);

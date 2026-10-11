@@ -95,13 +95,37 @@ function deployPages(): void {
     );
   }
 
-  console.log(`[spindle-publish] Triggering GitHub Pages deployment from '${branch}'...`);
-  execFileSync('gh', ['workflow', 'run', 'deploy-pages.yml', '--ref', branch], {
+  // Dispatch to the repository the branch was just checked against. Without
+  // --repo, gh picks its own default, which in a fork checkout can be the
+  // upstream (template) repository instead of the project.
+  const repo = upstreamRepository(branch);
+
+  console.log(`[spindle-publish] Triggering GitHub Pages deployment of ${repo} from '${branch}'...`);
+  execFileSync('gh', ['workflow', 'run', 'deploy-pages.yml', '--repo', repo, '--ref', branch], {
     stdio: 'inherit',
   });
   console.log(
-    '[spindle-publish] Deployment triggered. Check status with: gh run list --workflow=deploy-pages.yml'
+    `[spindle-publish] Deployment triggered. Check status with: gh run list --repo ${repo} --workflow=deploy-pages.yml`
   );
+}
+
+/** "owner/name" of the GitHub repository behind the remote that `branch` tracks. */
+function upstreamRepository(branch: string): string {
+  const remote = git('config', '--get', `branch.${branch}.remote`);
+  const url = git('remote', 'get-url', remote);
+  const repo = parseGitHubRepository(url);
+  if (!repo) {
+    throw new Error(
+      `[spindle-publish] Remote '${remote}' (${url}) is not a GitHub repository, so GitHub Pages cannot be deployed to it.`
+    );
+  }
+  return repo;
+}
+
+/** Accepts https://github.com/o/r(.git), git@github.com:o/r(.git) and ssh://git@github.com/o/r(.git). */
+export function parseGitHubRepository(url: string): string | null {
+  const match = url.trim().match(/github\.com[:/]([^/\s]+)\/([^/\s]+?)(?:\.git)?\/?$/i);
+  return match ? `${match[1]}/${match[2]}` : null;
 }
 
 function deployItch(config?: ItchConfig): void {
