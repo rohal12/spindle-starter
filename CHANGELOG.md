@@ -1,6 +1,6 @@
 # Changelog
 
-## Unreleased
+## 2.3.0
 
 - Update dependencies: `@rohal12/spindle` 0.51 → 0.59.30 (also fixes the QuickSave button), `@rohal12/spindle-lsp` 0.9 → 0.13, Vite 7 → 8, TypeScript 5 → 7, archiver 7 → 8, Capacitor 7 → 8 (Android project migrated: Gradle 8.14, AGP 8.13, compile/target SDK 36), sass, postcss-preset-env, tsx. `@rohal12/twee-ts` is 1.18.2. StoryData's `format-version` is now `0.59.30`
 - Fix fonts and images referenced from SCSS using absolute `/...` URLs, which broke on GitHub Pages project sites and JoiPlay
