@@ -118,9 +118,15 @@ This file is required by every Twine story. It contains metadata that the compil
 
 | Field            | Description                                                                                                                     |
 | ---------------- | ------------------------------------------------------------------------------------------------------------------------------- |
-| `ifid`           | A unique identifier for your story ([IFID](https://ifdb.org/ifid)). The template includes one — keep it or generate a new UUID. |
+| `ifid`           | A unique identifier for your story ([IFID](https://ifdb.org/ifid)). Give every story its own, and never change it once you publish. |
 | `format`         | The story format to use. Keep this as `spindle`.                                                                                |
 | `format-version` | The minimum format version. The installed version will be used as long as it satisfies this.                                    |
+
+::: warning
+Spindle stores saves, quick saves and the current session in the browser under the story's IFID. Two stories with the same IFID on one site (for example two GitHub Pages project sites under one account, or two projects on `localhost:4321`) share and overwrite each other's saves.
+
+`npx degit` projects get a new IFID automatically during `npm install`. If you started from GitHub's "Use this template" button or a clone, run `npm run ifid` once to replace the template's. Keep that IFID unchanged afterwards: changing it orphans your players' existing saves.
+:::
 
 ::: warning
 Don't delete `StoryData.twee` — the compiler needs it to know which story format to use.

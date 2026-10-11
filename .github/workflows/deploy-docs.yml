@@ -17,6 +17,9 @@ concurrency:
 
 jobs:
   build:
+    # Template-only: projects created from the starter must not replace their
+    # own Pages site with the starter documentation
+    if: github.repository == 'rohal12/spindle-starter'
     runs-on: ubuntu-latest
     steps:
       - uses: actions/checkout@v7
@@ -34,6 +37,7 @@ jobs:
           path: docs/.vitepress/dist
 
   deploy:
+    if: github.repository == 'rohal12/spindle-starter'
     needs: build
     runs-on: ubuntu-latest
     environment:

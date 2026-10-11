@@ -65,6 +65,10 @@ export ITCH_GAME=your-game
 npm run publish:itch
 ```
 
+On Windows, use `set ITCH_USER=your-username` and `set ITCH_GAME=your-game` in Command Prompt, or `$env:ITCH_USER = "your-username"` and `$env:ITCH_GAME = "your-game"` in PowerShell.
+
+`npm run publish:itch` builds the story on your machine and uploads it with your local butler. It does not use the GitHub repository variables and secrets described below.
+
 You can also set them permanently in `vite.config.ts` with `spindlePublish({ itch: { user: 'your-username', game: 'your-game' } })`. The default channel is `html5`; override it with `ITCH_CHANNEL`.
 
 ### Setup for GitHub Actions
@@ -77,19 +81,21 @@ To deploy automatically from GitHub:
    - Add a **secret** named `BUTLER_API_KEY` with your API key
    - Add **variables** `ITCH_USER` (your itch.io username) and `ITCH_GAME` (your project's URL slug)
 
-Then trigger the workflow from the **Actions** tab or with:
+Then trigger the workflow from the **Actions** tab or with the [GitHub CLI](https://cli.github.com/):
 
 ```sh
-npm run publish:itch
+gh workflow run deploy-itch.yml
 ```
 
 ### Options
 
-The default butler channel is `html5`. Override it with:
+The default butler channel is `html5`. Override it for a local publish with `--channel`:
 
 ```sh
 npm run publish:itch -- --channel web
 ```
+
+This is the same as setting the `ITCH_CHANNEL` environment variable, or `itch: { channel: 'web' }` in `spindlePublish()`. The GitHub Actions workflow takes a `channel` input instead: `gh workflow run deploy-itch.yml -f channel=web`.
 
 ### Creating Your itch.io Project
 

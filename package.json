@@ -9,13 +9,14 @@
     "dev": "tsx .build/dev.ts",
     "build": "vite build",
     "preview": "vite preview",
-    "publish:pages": "SPINDLE_PUBLISH=pages vite build",
-    "publish:itch": "SPINDLE_PUBLISH=itch vite build",
+    "publish:pages": "node scripts/publish.mjs pages",
+    "publish:itch": "node scripts/publish.mjs itch",
     "docs:dev": "vitepress dev docs",
     "docs:build": "vitepress build docs",
     "docs:preview": "vitepress preview docs",
-    "postinstall": "bash scripts/postinstall.sh",
-    "lint": "spindle-lsp check \"src/story/**/*.{twee,tw}\""
+    "postinstall": "node scripts/postinstall.mjs",
+    "lint": "spindle-lsp check \"src/story/**/*.{twee,tw}\"",
+    "ifid": "node scripts/ifid.mjs"
   },
   "keywords": [
     "twine",
