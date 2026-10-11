@@ -49,6 +49,10 @@ It's triggered manually — either from the **Actions** tab in your repo or via 
 
 The Android workflow (`.github/workflows/build-android.yml`) builds an APK with `spindlePack`'s `android` target. Run manually it uploads the APK as a workflow artifact; when you publish a GitHub release it also attaches the APK to that release.
 
+### Exporting saves on Android
+
+The save manager's **Export** button works in the Android app: it opens the system file picker so the player chooses where the save file goes, and shows "Saved" once the file is written (or "Export cancelled"). Spindle's own "Save exported" message appears immediately, whatever the player chooses in the picker. Importing uses the same picker.
+
 ### Signing Android releases
 
 Android only installs an update over an existing game if both APKs are signed with the same key. Without a keystore, every build is signed with a throwaway debug key, so players would have to uninstall the game, deleting their saves, to update. The workflow therefore **refuses to build a release without a keystore**; manual runs still produce debug APKs for testing.

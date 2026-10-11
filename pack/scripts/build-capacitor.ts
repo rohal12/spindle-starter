@@ -5,6 +5,8 @@ import {
   rmSync,
   existsSync,
   readdirSync,
+  readFileSync,
+  writeFileSync,
 } from 'fs';
 import { execSync, execFileSync } from 'child_process';
 import { resolve, join } from 'path';
@@ -90,6 +92,26 @@ function gradle(task: string, env: NodeJS.ProcessEnv): void {
 }
 
 /**
+ * Add the save-export bridge (android-export.js) to the copy of index.html
+ * that goes into the app. It needs to run before Spindle does, so it goes at
+ * the start of <head>; dist/index.html itself is left alone.
+ */
+function injectExportBridge(webAssets: string): void {
+  const indexPath = join(webAssets, 'index.html');
+  const script = readFileSync(join(CAP_DIR, 'android-export.js'), 'utf-8');
+  const html = readFileSync(indexPath, 'utf-8');
+  const head = html.match(/<head[^>]*>/i);
+  if (!head) {
+    throw new Error('[spindle-pack] Could not find <head> in index.html to add the Android export bridge.');
+  }
+  // A function replacer, because the script contains `$` sequences
+  writeFileSync(
+    indexPath,
+    html.replace(head[0], () => `${head[0]}<script>${script}</script>`)
+  );
+}
+
+/**
  * Turn the configured icon into Android launcher resources (all densities plus
  * the adaptive icon), using the same generator as the desktop builds. They go
  * to a gitignored directory that build.gradle layers over the template's
@@ -125,6 +147,7 @@ export async function buildCapacitor(ctx: BuildContext): Promise<void> {
   checkPrerequisites();
   installDeps();
   copyDistAssets(ctx, join(CAP_DIR, 'web-assets'));
+  injectExportBridge(join(CAP_DIR, 'web-assets'));
   generateLauncherIcons(ctx);
 
   const env = buildEnv(ctx);

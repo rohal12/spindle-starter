@@ -14,6 +14,7 @@
 - TypeScript: ESNext libs and imports from `src/assets/vendor` type-check
 - `deploy-docs.yml` only runs in the starter repository, so projects made from the template no longer have their Pages site replaced
 - `publish:pages` dispatches to the repository the branch tracks (`--repo`), not `gh`'s default
+- Pack: the Android app can export saves: Export opens the system file picker (before, the button reported success but wrote nothing)
 - Pack: Android launcher icons come from the configured `icon`; signed Android builds pass keystore passwords to Gradle via the environment instead of the command line (they leaked into logs and `ps`); release workflow requires a keystore; names with `/`, `$` etc. no longer break artifact paths or shell commands; a half-installed Capacitor is repaired
 
 ## 2.2.0
