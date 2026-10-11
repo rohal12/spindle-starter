@@ -9,7 +9,6 @@
 - Fix `npm install` failing on Windows without Bash: the postinstall script is now Node. It also no longer deletes `docs/` and `CHANGELOG.md` in a Git worktree or submodule, and gives a degit project its own IFID. Run `npm run ifid` to replace the template's IFID in a clone or template repo (stories sharing an IFID share saves)
 - Fix `npm run publish:pages` / `publish:itch` on Windows; `publish:itch -- --channel <name>` now works as documented
 - Fix `npm run build` succeeding on compiler errors such as a missing start passage; it now fails and `npm run dev` keeps the last good build and prints the errors
-- Fix the QuickSave button (it threw `DataCloneError` and saved nothing)
 - Fix the app bundle: dynamic `import()` works, source maps are embedded, and `onStoryStartup()` (in `src/assets/app/startup.ts`) runs code once `window.Story` exists
 - Dev server: CSS changes apply without a page reload, and `src/assets/media` changes are copied immediately
 - TypeScript: ESNext libs and imports from `src/assets/vendor` type-check
