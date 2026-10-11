@@ -97,9 +97,8 @@ export default defineConfig({
       output: {
         // The bundle ends up in a classic inline <script>, where import,
         // import.meta and chunk URLs don't work: emit one self-contained
-        // script and fold dynamic import()s into it.
+        // script and fold dynamic import()s into it (iife output does this by itself).
         format: "iife",
-        inlineDynamicImports: true,
         entryFileNames: "scripts/app.bundle.js",
         assetFileNames: (assetInfo) => {
           const name = assetInfo.name || "";

@@ -2,6 +2,7 @@
 
 ## Unreleased
 
+- Update dependencies: `@rohal12/spindle` 0.51 → 0.59.30 (also fixes the QuickSave button), `@rohal12/spindle-lsp` 0.9 → 0.13, Vite 7 → 8, TypeScript 5 → 7, archiver 7 → 8, Capacitor 7 → 8 (Android project migrated: Gradle 8.14, AGP 8.13, compile/target SDK 36), sass, postcss-preset-env, tsx. `@rohal12/twee-ts` is 1.18.2. StoryData's `format-version` is now `0.59.30`
 - Fix fonts and images referenced from SCSS using absolute `/...` URLs, which broke on GitHub Pages project sites and JoiPlay
 - Fix your stylesheet loading before Spindle's own styles, so rules like `body { font-family: ... }` were overridden; it's now added as a story stylesheet, ahead of any `[stylesheet]` passages (so those still override it). `@import` belongs in your SCSS: in a stylesheet passage it is no longer at the top and is ignored
 - Add [spindle-starter-demo](https://github.com/rohal12/spindle-starter-demo): a demo story built from the template on every push to `main` and every release, with a web version and downloadable builds
