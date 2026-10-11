@@ -1,6 +1,6 @@
 import { defineConfig, type Plugin } from "vite";
 import { resolve } from "path";
-import { mkdirSync, writeFileSync } from "fs";
+import { existsSync, mkdirSync, writeFileSync } from "fs";
 import { compile } from "@rohal12/twee-ts";
 import { spindlePublish } from "./publish/plugin.js";
 import { reportDiagnostics } from "./.build/diagnostics.js";
@@ -52,8 +52,12 @@ function spindlePlugin(): Plugin {
           );
         }
 
-        mkdirSync(resolve(import.meta.dirname!, "dist"), { recursive: true });
-        writeFileSync(resolve(import.meta.dirname!, "dist/index.html"), result.output);
+        // In development a broken story keeps the last good page, if there is one
+        const outFile = resolve(import.meta.dirname!, "dist/index.html");
+        if (errors.length === 0 || !existsSync(outFile)) {
+          mkdirSync(resolve(import.meta.dirname!, "dist"), { recursive: true });
+          writeFileSync(outFile, result.output);
+        }
         console.log(
           errors.length > 0
             ? "[spindle] Story compiled with errors.\n"
