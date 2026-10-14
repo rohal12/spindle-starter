@@ -23,6 +23,7 @@ export function artifactName(name: string): string {
     .replace(/-{2,}/g, '-')
     .replace(/^[-.]+|[-.]+$/g, '');
   if (safe === '') return 'story';
-  // Reserved device names on Windows (CON, NUL, COM1, ...)
-  return /^(con|prn|aux|nul|com\d|lpt\d)$/i.test(safe) ? `_${safe}` : safe;
+  // Windows reserves device names even with extensions (CON.txt), including
+  // the superscript digits recognized as COM/LPT device numbers.
+  return /^(con|prn|aux|nul|com[1-9¹²³]|lpt[1-9¹²³])(?:\.|$)/i.test(safe) ? `_${safe}` : safe;
 }

@@ -99,9 +99,14 @@ function deployPages(): void {
   // --repo, gh picks its own default, which in a fork checkout can be the
   // upstream (template) repository instead of the project.
   const repo = upstreamRepository(branch);
+  const mergeRef = git('config', '--get', `branch.${branch}.merge`);
+  if (!mergeRef.startsWith('refs/heads/')) {
+    throw new Error('[spindle-publish] The upstream must be a remote branch to deploy GitHub Pages.');
+  }
+  const remoteBranch = mergeRef.slice('refs/heads/'.length);
 
-  console.log(`[spindle-publish] Triggering GitHub Pages deployment of ${repo} from '${branch}'...`);
-  execFileSync('gh', ['workflow', 'run', 'deploy-pages.yml', '--repo', repo, '--ref', branch], {
+  console.log(`[spindle-publish] Triggering GitHub Pages deployment of ${repo} from '${remoteBranch}'...`);
+  execFileSync('gh', ['workflow', 'run', 'deploy-pages.yml', '--repo', repo, '--ref', remoteBranch], {
     stdio: 'inherit',
   });
   console.log(

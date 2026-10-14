@@ -14,10 +14,9 @@ jobs:
     if: github.repository != 'rohal12/spindle-starter'
     runs-on: ubuntu-latest
 
-    # Job-level so the step `if` below can see it (a step's own env isn't
-    # available to its `if`, and the secrets context isn't allowed there)
     env:
       KEYSTORE_BASE64: ${{ secrets.KEYSTORE_BASE64 }}
+      KEYSTORE_PASSWORD: ${{ secrets.KEYSTORE_PASSWORD }}
 
     steps:
       - uses: actions/checkout@v7
@@ -34,17 +33,19 @@ jobs:
       - name: Setup Android SDK
         uses: android-actions/setup-android@v4
 
-      - run: npm install
-
       # Without a keystore the APK is signed with a debug key that Gradle
       # generates fresh on every runner. Android refuses to update an installed
       # game with an APK signed by a different key, so players would have to
       # uninstall (and lose their saves) for every release.
       - name: Require a signing keystore for releases
-        if: github.event_name == 'release' && env.KEYSTORE_BASE64 == ''
+        if: github.event_name == 'release'
         run: |
-          echo "::error::Release APKs must be signed with a key you keep. Add the KEYSTORE_BASE64 and KEYSTORE_PASSWORD secrets (see docs/publishing.md, 'Signing Android releases')."
-          exit 1
+          if [ -z "$KEYSTORE_BASE64" ] || [ -z "$KEYSTORE_PASSWORD" ]; then
+            echo "::error::Release APKs require both KEYSTORE_BASE64 and KEYSTORE_PASSWORD secrets (see docs/publishing.md, 'Signing Android releases')."
+            exit 1
+          fi
+
+      - run: npm install
 
       - name: Decode keystore
         if: env.KEYSTORE_BASE64 != ''
@@ -55,9 +56,10 @@ jobs:
         env:
           NODE_ENV: production
           SPINDLE_PACK_TARGETS: android
+          SPINDLE_ANDROID_RELEASE: ${{ github.event_name == 'release' && '1' || '' }}
           SPINDLE_KEYSTORE_PATH: ${{ env.KEYSTORE_BASE64 != '' && '/tmp/release.keystore' || '' }}
           SPINDLE_KEYSTORE_PASSWORD: ${{ secrets.KEYSTORE_PASSWORD }}
-          SPINDLE_KEY_ALIAS: ${{ secrets.KEY_ALIAS || 'release' }}
+          SPINDLE_KEY_ALIAS: ${{ secrets.KEY_ALIAS }}
           SPINDLE_KEY_PASSWORD: ${{ secrets.KEY_PASSWORD }}
 
       - uses: actions/upload-artifact@v7
