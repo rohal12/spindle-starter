@@ -38,6 +38,10 @@ npm install
 
 This downloads everything the project needs — the Spindle story format, the twee-ts compiler, Vite, and other build tools. It also creates a symlink to the Spindle format so the compiler can find it.
 
+Installing preserves your documentation, changelog, workflows and package settings, including on repeat installs without Git. A degit copy gets its own story IFID automatically; for a clone or GitHub template, run `npm run ifid` once.
+
+On a fresh copy, you can optionally run `npm run setup` to remove the starter's `docs/`, `CHANGELOG.md`, documentation/demo workflows and docs tooling. Run this before adding your own documentation: it removes those paths. It also replaces the template IFID if needed, and preserves an existing story IFID.
+
 ## Start the Dev Server
 
 ```sh
@@ -85,6 +89,8 @@ Save the file. Your browser should reload automatically and show your changes.
 | `npm run build`         | Production build to `dist/`               |
 | `npm run preview`       | Preview the production build locally      |
 | `npm run lint`          | Lint story files with `spindle-lsp`       |
+| `npm test`              | Run build-tool regression tests           |
+| `npm run setup`         | Remove starter docs on a fresh project     |
 | `npm run publish:pages` | Deploy to GitHub Pages                    |
 | `npm run publish:itch`  | Deploy to itch.io                         |
 

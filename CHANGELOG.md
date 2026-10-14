@@ -1,5 +1,14 @@
 # Changelog
 
+## Unreleased
+
+- Preserve project documentation, workflows and package settings on every install, including projects without Git. Move template cleanup to the explicit, optional `npm run setup` command.
+- Use archiver 8's named `ZipArchive` API so opt-in packaging and web builds with packaging disabled load successfully.
+- Require both Android release-signing secrets, reject incomplete signing settings before native build work, and prevent release builds from falling back to debug signing.
+- Deploy Pages from the tracked remote branch even when the local branch has a different name.
+- Sanitize Windows device names with extensions and superscript COM/LPT numbers in artifact filenames without changing story display titles.
+- Add build-tool regression tests (`npm test`).
+
 ## 2.3.0
 
 - Update dependencies: `@rohal12/spindle` 0.51 → 0.59.30 (also fixes the QuickSave button), `@rohal12/spindle-lsp` 0.9 → 0.13, Vite 7 → 8, TypeScript 5 → 7, archiver 7 → 8, Capacitor 7 → 8 (Android project migrated: Gradle 8.14, AGP 8.13, compile/target SDK 36), sass, postcss-preset-env, tsx. `@rohal12/twee-ts` is 1.18.2. StoryData's `format-version` is now `0.59.30`

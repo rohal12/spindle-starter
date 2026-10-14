@@ -23,7 +23,7 @@ If your project is already on GitHub:
 npm run publish:pages
 ```
 
-This builds the story locally as a check, then triggers the GitHub Actions workflow, which builds and deploys your story from GitHub on the current branch. Because the deployed version comes from GitHub, the command refuses to run with uncommitted or unpushed changes. It requires the [GitHub CLI](https://cli.github.com/) (`gh`) to be installed and authenticated.
+This builds the story locally as a check, then triggers the GitHub Actions workflow in the repository and remote branch your local branch tracks. For example, local `story` tracking `origin/main` deploys `main`. Because the deployed version comes from GitHub, the command refuses to run with uncommitted or unpushed changes. It requires the [GitHub CLI](https://cli.github.com/) (`gh`) to be installed and authenticated.
 
 ### Setup
 
@@ -55,7 +55,7 @@ The save manager's **Export** button works in the Android app: it opens the syst
 
 ### Signing Android releases
 
-Android only installs an update over an existing game if both APKs are signed with the same key. Without a keystore, every build is signed with a throwaway debug key, so players would have to uninstall the game, deleting their saves, to update. The workflow therefore **refuses to build a release without a keystore**; manual runs still produce debug APKs for testing.
+Android only installs an update over an existing game if both APKs are signed with the same key. Fresh runners generate different debug keys, so players would have to uninstall the game, deleting their saves, to update. The workflow therefore **requires both the keystore and its password for releases**. Manual runs without signing settings produce debug APKs for testing; incomplete signing settings fail instead of silently producing a debug APK.
 
 Create a keystore once and keep it safe (if you lose it you can never update installed games):
 
@@ -72,7 +72,9 @@ Use the same password for the keystore and the key (keytool's default for PKCS12
 | `KEY_ALIAS`         | Optional, defaults to `release`                                  |
 | `KEY_PASSWORD`      | Optional, defaults to the keystore password                      |
 
-For a local build, set `SPINDLE_KEYSTORE_PATH`, `SPINDLE_KEYSTORE_PASSWORD`, and optionally `SPINDLE_KEY_ALIAS` and `SPINDLE_KEY_PASSWORD`. The passwords are handed to Gradle through the environment, not the command line.
+For a local build, set `SPINDLE_KEYSTORE_PATH`, `SPINDLE_KEYSTORE_PASSWORD`, and optionally `SPINDLE_KEY_ALIAS` and `SPINDLE_KEY_PASSWORD`. Set `SPINDLE_ANDROID_RELEASE=1` to require a signed release; the release workflow sets this automatically. The builder checks for complete signing settings and an existing keystore file before starting native build work. Invalid keys or passwords fail the Gradle build. The passwords are handed to Gradle through the environment, not the command line.
+
+Packaging derives safe artifact filenames from the story's display name while keeping the title unchanged in app metadata. For example, `Love/Hate` produces `Love-Hate.apk` and `Love-Hate-joiplay.zip`; Windows device names such as `CON.txt` are prefixed with `_`.
 
 ## itch.io
 

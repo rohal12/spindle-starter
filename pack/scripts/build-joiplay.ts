@@ -1,6 +1,6 @@
 import { createWriteStream, mkdirSync } from 'fs';
 import { join } from 'path';
-import archiver from 'archiver';
+import { ZipArchive } from 'archiver';
 import type { BuildContext } from '../types.js';
 import { artifactName } from './identifier.js';
 
@@ -28,7 +28,7 @@ export async function buildJoiPlay(ctx: BuildContext): Promise<void> {
 
   await new Promise<void>((resolve, reject) => {
     const output = createWriteStream(zipPath);
-    const archive = archiver('zip', { zlib: { level: 9 } });
+    const archive = new ZipArchive({ zlib: { level: 9 } });
 
     output.on('close', resolve);
     output.on('error', reject);
@@ -45,7 +45,7 @@ export async function buildJoiPlay(ctx: BuildContext): Promise<void> {
     // Add README
     archive.append(README_TEXT, { name: 'README.txt' });
 
-    archive.finalize();
+    archive.finalize().catch(reject);
   });
 
   console.log(`[spindle-pack] JoiPlay zip created: ${zipPath}`);

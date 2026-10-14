@@ -1,6 +1,6 @@
 // Runs after `npm install`. Written in Node so it works wherever npm does,
 // including Windows without Bash.
-import { existsSync, readFileSync, rmSync, writeFileSync } from "node:fs";
+import { existsSync, readFileSync, writeFileSync } from "node:fs";
 import { randomUUID } from "node:crypto";
 import { execFileSync } from "node:child_process";
 
@@ -26,25 +26,9 @@ function hasTemplateIfid() {
   return existsSync(STORY_DATA) && readFileSync(STORY_DATA, "utf-8").includes(TEMPLATE_IFID);
 }
 
-// No Git work tree means a fresh degit copy: this is the one moment the
-// template-only files can be removed and the project given its own identity.
-// Anything else (clone, worktree, submodule, existing project) is left alone.
+// An install can happen repeatedly, including in projects without Git. It
+// must never delete project files. Template cleanup is an explicit setup step.
 if (!insideGitWorkTree()) {
-  rmSync("docs", { recursive: true, force: true });
-  rmSync(".github/workflows/deploy-docs.yml", { force: true });
-  rmSync(".github/workflows/trigger-demo.yml", { force: true });
-  rmSync("CHANGELOG.md", { force: true });
-
-  // Remove docs-only dependencies and scripts
-  const pkg = JSON.parse(readFileSync("package.json", "utf-8"));
-  for (const script of ["docs:dev", "docs:build", "docs:preview"]) {
-    delete pkg.scripts?.[script];
-  }
-  delete pkg.devDependencies?.vitepress;
-  writeFileSync("package.json", JSON.stringify(pkg, null, 2) + "\n");
-
-  console.log("Cleaned up template-only files (docs, deploy-docs and trigger-demo workflows, changelog).");
-
   if (hasTemplateIfid()) {
     const ifid = randomUUID().toUpperCase();
     writeFileSync(STORY_DATA, readFileSync(STORY_DATA, "utf-8").replace(TEMPLATE_IFID, ifid));

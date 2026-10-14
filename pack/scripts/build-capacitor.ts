@@ -16,6 +16,7 @@ import { copyDistAssets } from './copy-dist.js';
 import { androidApplicationId, artifactName } from './identifier.js';
 import { npx } from './exec.js';
 import { resolveIcon } from './icon.js';
+import { androidSigning } from './android-signing.js';
 
 const CAP_DIR = resolve(import.meta.dirname!, '../capacitor');
 const CAP_CLI = join(CAP_DIR, 'node_modules', '@capacitor', 'cli', 'bin', 'capacitor');
@@ -144,6 +145,7 @@ function findApk(buildType: 'debug' | 'release'): string {
 export async function buildCapacitor(ctx: BuildContext): Promise<void> {
   console.log('[spindle-pack] Building Android APK via Capacitor...');
 
+  const signing = androidSigning(process.env);
   checkPrerequisites();
   installDeps();
   copyDistAssets(ctx, join(CAP_DIR, 'web-assets'));
@@ -162,20 +164,15 @@ export async function buildCapacitor(ctx: BuildContext): Promise<void> {
   // are handed to Gradle as ORG_GRADLE_PROJECT_* environment variables that
   // android/app/build.gradle reads, never as command-line arguments: those end
   // up in `ps` output and in Node's "Command failed: ..." error message.
-  const keystorePath = process.env.SPINDLE_KEYSTORE_PATH;
-  const keystorePass = process.env.SPINDLE_KEYSTORE_PASSWORD;
-  const keyAlias = process.env.SPINDLE_KEY_ALIAS || 'release';
-  const keyPass = process.env.SPINDLE_KEY_PASSWORD || keystorePass;
-
   let buildType: 'debug' | 'release';
-  if (keystorePath && keystorePass && keyPass) {
+  if (signing) {
     console.log('[spindle-pack] Building signed release APK...');
     gradle('assembleRelease', {
       ...env,
-      ORG_GRADLE_PROJECT_spindleKeystorePath: resolve(keystorePath),
-      ORG_GRADLE_PROJECT_spindleKeystorePassword: keystorePass,
-      ORG_GRADLE_PROJECT_spindleKeyAlias: keyAlias,
-      ORG_GRADLE_PROJECT_spindleKeyPassword: keyPass,
+      ORG_GRADLE_PROJECT_spindleKeystorePath: signing.path,
+      ORG_GRADLE_PROJECT_spindleKeystorePassword: signing.password,
+      ORG_GRADLE_PROJECT_spindleKeyAlias: signing.alias,
+      ORG_GRADLE_PROJECT_spindleKeyPassword: signing.keyPassword,
     });
     buildType = 'release';
   } else {
