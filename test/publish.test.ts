@@ -1,9 +1,9 @@
 import { execFileSync } from 'child_process';
-import { mkdtempSync, rmSync, writeFileSync } from 'node:fs';
+import { mkdirSync, mkdtempSync, readFileSync, rmSync, writeFileSync, copyFileSync } from 'node:fs';
 import { tmpdir } from 'node:os';
-import { join } from 'node:path';
+import { join, resolve } from 'node:path';
 import { afterEach, beforeEach, expect, test, vi } from 'vitest';
-import { spindlePublish } from '../publish/plugin.js';
+import { spindlePublish, type SpindlePublishConfig } from '../publish/plugin.js';
 
 vi.mock('child_process', () => ({ execFileSync: vi.fn() }));
 const real = await vi.importActual<typeof import('child_process')>('child_process');
@@ -13,8 +13,8 @@ let dispatches: string[][];
 function git(...args: string[]): string {
   return real.execFileSync('git', args, { cwd: root, encoding: 'utf8', stdio: ['ignore', 'pipe', 'pipe'] });
 }
-async function publish(): Promise<void> {
-  const hook = spindlePublish().closeBundle as { handler: () => Promise<void> };
+async function publish(config?: SpindlePublishConfig): Promise<void> {
+  const hook = spindlePublish(config).closeBundle as { handler: () => Promise<void> };
   await hook.handler();
 }
 
@@ -69,3 +69,37 @@ test('a branch without an upstream cannot trigger deployment', async () => {
   await expect(publish()).rejects.toThrow('has no upstream');
   expect(dispatches).toEqual([]);
 });
+
+test.each([
+  ['beta', 'html5', 'beta'],
+  [undefined, 'preview', 'preview'],
+  [undefined, undefined, 'html5'],
+])('itch channel env=%s config=%s uploads to %s', async (env, configured, expected) => {
+  vi.stubEnv('SPINDLE_PUBLISH', 'itch');
+  vi.stubEnv('ITCH_CHANNEL', env);
+  vi.mocked(execFileSync).mockReturnValue('');
+  await publish({ itch: { user: 'example', game: 'game', channel: configured } });
+  expect(execFileSync).toHaveBeenCalledWith('butler',
+    ['push', 'dist/', `example/game:${expected}`, '--ignore', 'pack'], { stdio: 'inherit' });
+});
+
+test.each([['pages'], ['itch', '--channel', 'beta'], ['itch', '--channel=preview']])(
+  'web publish wrapper skips configured native builds: %j', (...args) => {
+    mkdirSync(join(root, 'scripts'));
+    copyFileSync(resolve('scripts/publish.mjs'), join(root, 'scripts/publish.mjs'));
+    mkdirSync(join(root, 'node_modules/vite/bin'), { recursive: true });
+    const result = join(root, 'build-env.json');
+    // Recording Vite entry point exercises the real wrapper without publishing.
+    writeFileSync(join(root, 'node_modules/vite/bin/vite.js'),
+      `require('node:fs').writeFileSync(${JSON.stringify(result)}, JSON.stringify({
+        target: process.env.SPINDLE_PUBLISH, pack: process.env.SPINDLE_PACK_TARGETS,
+        channel: process.env.ITCH_CHANNEL, args: process.argv.slice(2) }));`);
+    real.execFileSync(process.execPath, [join(root, 'scripts/publish.mjs'), ...args], {
+      cwd: root, env: { ...process.env, SPINDLE_PACK_TARGETS: 'android,windows' },
+    });
+    expect(JSON.parse(readFileSync(result, 'utf8'))).toMatchObject({
+      target: args[0], pack: 'none', args: ['build'],
+      ...(args[0] === 'itch' ? { channel: args[1]?.includes('=') ? 'preview' : 'beta' } : {}),
+    });
+  },
+);

@@ -4,7 +4,7 @@ import browserSync from "browser-sync";
 import { watch as tweeWatch } from "@rohal12/twee-ts";
 import fs from "fs";
 import { reportDiagnostics } from "./diagnostics.js";
-import { syncMedia } from "./media.js";
+import { watchMedia } from "./media.js";
 
 // Vite's build() sets NODE_ENV to "production" when it is unset, which would
 // disable test mode, sourcemaps and unminified CSS for every rebuild below.
@@ -24,15 +24,6 @@ const c = {
 function log(prefix: string, color: string, msg: string) {
   const time = new Date().toLocaleTimeString("en-US", { hour12: false });
   console.log(`${c.dim}${time}${c.reset} ${color}[${prefix}]${c.reset} ${msg}`);
-}
-
-// Debounce helper
-function debounce<T extends (...args: any[]) => void>(fn: T, ms: number): T {
-  let timer: NodeJS.Timeout;
-  return ((...args: any[]) => {
-    clearTimeout(timer);
-    timer = setTimeout(() => fn(...args), ms);
-  }) as T;
 }
 
 // The author stylesheet (CSS bundle + stylesheet passages) is inlined in
@@ -169,15 +160,10 @@ async function dev() {
   });
 
   // Mirror src/assets/media/ into dist/media/ (adds, changes and removals)
-  const mediaDir = resolve(cwd, "src/assets/media");
-  if (fs.existsSync(mediaDir)) {
-    const onMediaChange = debounce(() => {
-      syncMedia(cwd);
-      log("media", c.yellow, "Media updated.");
-      bs.reload();
-    }, 100);
-    fs.watch(mediaDir, { recursive: true }, onMediaChange);
-  }
+  const stopMediaWatch = watchMedia(cwd, () => {
+    log("media", c.yellow, "Media updated.");
+    bs.reload();
+  });
 
   // Watch JS/CSS with Vite. The story compiler watches the built bundles, so
   // rebuilds reach the browser through its onBuild above.
@@ -192,6 +178,7 @@ async function dev() {
   const cleanup = () => {
     log("dev", c.blue, "Shutting down...");
     tweeAbort.abort();
+    stopMediaWatch();
     bs.exit();
     process.exit(0);
   };

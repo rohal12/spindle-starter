@@ -33,6 +33,8 @@ Prefer `.woff2` files — they offer the best compression and are supported by a
 
 Static files like images, audio, and video go in `src/assets/media/`. These are copied to `dist/media/` during build, keeping any subdirectories.
 
+During development, additions, changes and removals are copied automatically and reload the player. You can create, remove or replace the media directory while the server runs.
+
 ### Referencing from Head Content
 
 In `src/head-content.html`, reference media files with the `media/` prefix:

@@ -70,6 +70,29 @@ test('reinstalls preserve a normal Git project', () => {
   init(root);
   checkInstall(root, true);
 });
+test('nested copies inside an unrelated Git repo get distinct stable story identities', () => {
+  const parent = fixture();
+  init(parent);
+  const ifids: string[] = [];
+  for (const name of ['first-story', 'second-story']) {
+    const root = join(parent, 'games', name);
+    for (const [path, content] of Object.entries({ ...files, 'src/story/StoryData.twee': templateIfid })) {
+      const filename = join(root, path);
+      mkdirSync(join(filename, '..'), { recursive: true });
+      writeFileSync(filename, content);
+    }
+    checkInstall(root, false);
+    ifids.push(readFileSync(join(root, 'src/story/StoryData.twee'), 'utf8'));
+  }
+  expect(ifids[0]).not.toBe(ifids[1]);
+});
+test('a customized story identity in a nested copy remains unchanged', () => {
+  const root = fixture();
+  const ownIfid = '12345678-1234-1234-1234-123456789ABC';
+  writeFileSync(join(root, 'src/story/StoryData.twee'), ownIfid);
+  execFileSync(process.execPath, [postinstall], { cwd: root });
+  expect(readFileSync(join(root, 'src/story/StoryData.twee'), 'utf8')).toBe(ownIfid);
+});
 test('reinstalls preserve an actual linked worktree and untracked notes', () => {
   const root = fixture();
   init(root);

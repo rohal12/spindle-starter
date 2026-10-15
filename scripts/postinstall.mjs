@@ -2,24 +2,14 @@
 // including Windows without Bash.
 import { existsSync, readFileSync, writeFileSync } from "node:fs";
 import { randomUUID } from "node:crypto";
-import { execFileSync } from "node:child_process";
 
 const STORY_DATA = "src/story/StoryData.twee";
 const TEMPLATE_IFID = "D674C58C-DEFA-4F70-B7A2-27742230C0FC";
 
 function insideGitWorkTree() {
   // `.git` is a directory in a clone but a file in linked worktrees and submodules
-  if (existsSync(".git")) return true;
-  try {
-    return (
-      execFileSync("git", ["rev-parse", "--is-inside-work-tree"], {
-        encoding: "utf-8",
-        stdio: ["ignore", "pipe", "ignore"],
-      }).trim() === "true"
-    );
-  } catch {
-    return false;
-  }
+  // An ancestor's repository does not make a nested template copy a clone.
+  return existsSync(".git");
 }
 
 function hasTemplateIfid() {

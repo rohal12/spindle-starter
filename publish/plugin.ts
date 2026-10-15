@@ -10,7 +10,7 @@ export interface ItchConfig {
   user?: string;
   /** itch.io game/project name (or set ITCH_GAME env var) */
   game?: string;
-  /** Butler channel (or set ITCH_CHANNEL env var, default: 'html5') */
+  /** Default Butler channel (ITCH_CHANNEL / --channel override it, default: 'html5') */
   channel?: string;
 }
 
@@ -136,7 +136,7 @@ export function parseGitHubRepository(url: string): string | null {
 function deployItch(config?: ItchConfig): void {
   const user = config?.user ?? process.env.ITCH_USER;
   const game = config?.game ?? process.env.ITCH_GAME;
-  const channel = config?.channel ?? process.env.ITCH_CHANNEL ?? 'html5';
+  const channel = process.env.ITCH_CHANNEL ?? config?.channel ?? 'html5';
 
   if (!user || !game) {
     throw new Error(

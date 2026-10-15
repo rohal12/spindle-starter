@@ -12,7 +12,7 @@ if (!["pages", "itch"].includes(target)) {
   process.exit(1);
 }
 
-const env = { ...process.env, SPINDLE_PUBLISH: target };
+const env = { ...process.env, SPINDLE_PUBLISH: target, SPINDLE_PACK_TARGETS: "none" };
 
 for (let i = 0; i < rest.length; i++) {
   const arg = rest[i];
