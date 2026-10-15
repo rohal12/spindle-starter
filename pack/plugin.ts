@@ -29,8 +29,8 @@ export function spindlePack(config: SpindlePackConfig): Plugin {
     name: 'vite-plugin-spindle-pack',
     apply: 'build',
 
-    // Run after the story compiler has written dist/index.html
-    closeBundle: {
+    // Package only successful output, after the story compiler has finished.
+    writeBundle: {
       order: 'post',
       sequential: true,
       handler: () => pack(resolved),

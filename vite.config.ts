@@ -23,9 +23,21 @@ import { syncMedia } from "./.build/media.js";
 function spindlePlugin(): Plugin {
   return {
     name: "vite-plugin-spindle",
-    // closeBundle hooks run in parallel by default. Compile the story first and
-    // make later plugins (publish, pack) wait until dist/index.html exists.
-    closeBundle: {
+    // Vite omits empty CSS. Emit a replacement so watch builds overwrite the
+    // previous stylesheet and the story watcher can observe it being cleared.
+    generateBundle: {
+      order: "post",
+      handler(_options, bundle) {
+        const fileName = "styles/app.bundle.css";
+        if (!bundle[fileName]) {
+          this.emitFile({ type: "asset", fileName, source: "" });
+        }
+      },
+    },
+    // Only compile after assets were written successfully. closeBundle also
+    // runs on failed builds, where dist may still contain an older bundle.
+    // Later plugins (publish, pack) must wait for the story to succeed too.
+    writeBundle: {
       order: "pre",
       sequential: true,
       async handler() {

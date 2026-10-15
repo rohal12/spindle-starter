@@ -29,7 +29,7 @@ a {
 }
 ```
 
-Save the file and the browser will inject the new styles without a full page reload.
+Save the file and the browser will inject the new styles without a full page reload. Clearing the stylesheet also removes its previously applied rules.
 
 ### Modern CSS Features
 

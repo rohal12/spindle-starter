@@ -14,7 +14,7 @@ function git(...args: string[]): string {
   return real.execFileSync('git', args, { cwd: root, encoding: 'utf8', stdio: ['ignore', 'pipe', 'pipe'] });
 }
 async function publish(config?: SpindlePublishConfig): Promise<void> {
-  const hook = spindlePublish(config).closeBundle as { handler: () => Promise<void> };
+  const hook = spindlePublish(config).writeBundle as { handler: () => Promise<void> };
   await hook.handler();
 }
 
