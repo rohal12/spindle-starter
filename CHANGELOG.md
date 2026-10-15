@@ -2,6 +2,9 @@
 
 ## Unreleased
 
+- Preserve player state when CSS is added after loading with an empty author stylesheet.
+- Rebuild watched production output and opted-in packages when story, head content or media inputs change.
+- Print the actual development server URL when the preferred port is occupied.
 - Prevent failed asset or story builds from publishing or packaging stale output.
 - Clear deleted author styles in the development player when the stylesheet becomes empty or its last import is removed.
 - Generate distinct, stable IFIDs for degit copies nested inside another Git repository.

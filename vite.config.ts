@@ -23,6 +23,12 @@ import { syncMedia } from "./.build/media.js";
 function spindlePlugin(): Plugin {
   return {
     name: "vite-plugin-spindle",
+    buildStart() {
+      // These compiler inputs are outside Vite's app import graph. Watching
+      // the directory also catches newly added and removed story passages.
+      this.addWatchFile(resolve(import.meta.dirname!, "src/story"));
+      this.addWatchFile(resolve(import.meta.dirname!, "src/head-content.html"));
+    },
     // Vite omits empty CSS. Emit a replacement so watch builds overwrite the
     // previous stylesheet and the story watcher can observe it being cleared.
     generateBundle: {
@@ -85,6 +91,9 @@ function mediaPlugin(): Plugin {
   return {
     name: "vite-plugin-spindle-media",
     apply: "build",
+    buildStart() {
+      this.addWatchFile(resolve(import.meta.dirname!, "src/assets/media"));
+    },
     writeBundle() {
       syncMedia(import.meta.dirname!);
     },

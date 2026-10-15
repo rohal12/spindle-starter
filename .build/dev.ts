@@ -48,15 +48,26 @@ const CSS_UPDATER = `<script>(function () {
     return fetch(location.href, { cache: "no-store" })
       .then(function (r) { return r.text(); }).then(stylesheetOf);
   }
-  var current = null;
-  fetchStylesheet().then(function (css) { if (current === null) current = css; });
+  // Read the page actually loaded, rather than fetching a possibly newer build.
+  var source = document.querySelector('style[role="stylesheet"]');
+  var current = source ? source.textContent : null;
+  var applied = null;
   function apply() {
     fetchStylesheet().then(function (next) {
-      var applied = Array.prototype.find.call(
-        document.head.querySelectorAll("style"),
-        function (s) { return !s.id && s.textContent === current; }
-      );
-      if (next === null || !applied) return location.reload();
+      if (next === null || current === null) return location.reload();
+      if (!applied && current !== "") {
+        applied = Array.prototype.find.call(
+          document.head.querySelectorAll("style"),
+          function (s) { return !s.id && s.textContent === current; }
+        );
+      }
+      // Spindle skips author-style creation when CSS is initially empty.
+      // Append after its built-in styles, and retain the element across clears.
+      if (!applied && current === "") {
+        applied = document.createElement("style");
+        document.head.appendChild(applied);
+      }
+      if (!applied) return location.reload();
       applied.textContent = next;
       current = next;
     });
@@ -139,7 +150,7 @@ async function dev() {
     },
   });
 
-  await new Promise<void>((resolve) => {
+  await new Promise<void>((resolve, reject) => {
     bs.init(
       {
         server: "./dist",
@@ -152,8 +163,9 @@ async function dev() {
           { match: /<\/body>/i, fn: (_req: unknown, _res: unknown, match: string) => CSS_UPDATER + match },
         ],
       },
-      () => {
-        log("server", c.green, "http://localhost:4321");
+      (error) => {
+        if (error) return reject(error);
+        log("server", c.green, bs.getOption("urls").get("local"));
         resolve();
       },
     );
