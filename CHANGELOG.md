@@ -2,6 +2,11 @@
 
 ## Unreleased
 
+- Generate distinct, stable IFIDs for degit copies nested inside another Git repository.
+- Skip native packaging for local web publishing and honor explicit itch channel overrides over configured defaults.
+- Use safe Tauri product names while preserving the story window title, and pass Windows packaging paths containing percent sequences without shell expansion.
+- Export desktop saves through a native file picker with completion, cancellation and failure feedback; open external new-window links in the system browser.
+- Restore media watching when the source directory is created, removed or replaced during development.
 - Preserve project documentation, workflows and package settings on every install, including projects without Git. Move template cleanup to the explicit, optional `npm run setup` command.
 - Use archiver 8's named `ZipArchive` API so opt-in packaging and web builds with packaging disabled load successfully.
 - Require both Android release-signing secrets, reject incomplete signing settings before native build work, and prevent release builds from falling back to debug signing.

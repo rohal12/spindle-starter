@@ -74,7 +74,9 @@ Use the same password for the keystore and the key (keytool's default for PKCS12
 
 For a local build, set `SPINDLE_KEYSTORE_PATH`, `SPINDLE_KEYSTORE_PASSWORD`, and optionally `SPINDLE_KEY_ALIAS` and `SPINDLE_KEY_PASSWORD`. Set `SPINDLE_ANDROID_RELEASE=1` to require a signed release; the release workflow sets this automatically. The builder checks for complete signing settings and an existing keystore file before starting native build work. Invalid keys or passwords fail the Gradle build. The passwords are handed to Gradle through the environment, not the command line.
 
-Packaging derives safe artifact filenames from the story's display name while keeping the title unchanged in app metadata. For example, `Love/Hate` produces `Love-Hate.apk` and `Love-Hate-joiplay.zip`; Windows device names such as `CON.txt` are prefixed with `_`.
+Packaging derives safe artifact filenames from the story's display name. For example, `Love/Hate` produces `Love-Hate.apk` and `Love-Hate-joiplay.zip`; Windows device names such as `CON.txt` are prefixed with `_`. Desktop builds use the same safe name for Tauri's product name and keep the original title in the story window. Paths containing spaces, `$` or literal `%NAME%` sequences are passed unchanged to packaging tools, including on Windows.
+
+In desktop apps, exporting a save opens a native file picker. A dialog reports the saved path, cancellation or failure after the picker closes. External `http`, `https` and `mailto` links requesting a new window (including `window.open()`) open in the system browser or mail client while the story remains open.
 
 ## itch.io
 
@@ -98,7 +100,7 @@ npm run publish:itch
 
 On Windows, use `set ITCH_USER=your-username` and `set ITCH_GAME=your-game` in Command Prompt, or `$env:ITCH_USER = "your-username"` and `$env:ITCH_GAME = "your-game"` in PowerShell.
 
-`npm run publish:itch` builds the story on your machine and uploads it with your local butler. It does not use the GitHub repository variables and secrets described below.
+`npm run publish:itch` builds the story on your machine and uploads it with your local butler. It does not use the GitHub repository variables and secrets described below. Both local web publishing commands (`publish:itch` and `publish:pages`) skip packaging, even when native targets are enabled in your configuration or environment.
 
 You can also set them permanently in `vite.config.ts` with `spindlePublish({ itch: { user: 'your-username', game: 'your-game' } })`. The default channel is `html5`; override it with `ITCH_CHANNEL`.
 
@@ -126,7 +128,7 @@ The default butler channel is `html5`. Override it for a local publish with `--c
 npm run publish:itch -- --channel web
 ```
 
-This is the same as setting the `ITCH_CHANNEL` environment variable, or `itch: { channel: 'web' }` in `spindlePublish()`. The GitHub Actions workflow takes a `channel` input instead: `gh workflow run deploy-itch.yml -f channel=web`.
+`--channel` overrides `ITCH_CHANNEL` and the configured `itch.channel` default. Without the flag, `ITCH_CHANNEL` overrides the configured channel; without either, the configured channel or `html5` is used. The GitHub Actions workflow takes a `channel` input instead: `gh workflow run deploy-itch.yml -f channel=web`.
 
 ### Creating Your itch.io Project
 

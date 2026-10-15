@@ -50,7 +50,7 @@ function getBundleFlag(target: Target): string | null {
  */
 function writePackConfig(ctx: BuildContext): void {
   const config = {
-    productName: ctx.config.name,
+    productName: artifactName(ctx.config.name),
     version: ctx.config.version,
     identifier: tauriIdentifier(ctx.config.identifier),
     app: {
@@ -58,6 +58,8 @@ function writePackConfig(ctx: BuildContext): void {
         {
           title: ctx.config.name,
           ...ctx.config.window,
+          // Rust creates the window from this config with native handlers attached.
+          create: false,
         },
       ],
     },
@@ -77,7 +79,8 @@ function generateIcons(ctx: BuildContext): void {
 }
 
 function findOutput(target: Target, ctx: BuildContext): string {
-  const binaryName = ctx.config.name.replace(/\s+/g, '-').toLowerCase();
+  const productName = artifactName(ctx.config.name);
+  const binaryName = productName.toLowerCase();
   const releaseDir = join(SRC_TAURI, 'target', 'release');
   const bundleDir = join(releaseDir, 'bundle');
 
@@ -87,7 +90,7 @@ function findOutput(target: Target, ctx: BuildContext): string {
       const exe = join(releaseDir, `${binaryName}.exe`);
       if (existsSync(exe)) return exe;
       // Tauri may use productName directly
-      const altExe = join(releaseDir, `${ctx.config.name}.exe`);
+      const altExe = join(releaseDir, `${productName}.exe`);
       if (existsSync(altExe)) return altExe;
       // Search for any .exe that isn't a build tool
       const exes = readdirSync(releaseDir).filter(

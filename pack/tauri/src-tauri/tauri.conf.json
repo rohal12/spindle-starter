@@ -8,6 +8,7 @@
   "app": {
     "windows": [
       {
+        "create": false,
         "title": "Spindle Story",
         "width": 960,
         "height": 600,
