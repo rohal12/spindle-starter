@@ -141,6 +141,8 @@ When you run `npm start` or `npm run build`:
 
 The development server watches both sides — Vite rebuilds assets on script/style changes, and twee-ts incrementally recompiles on `.twee` file changes.
 
+CSS edits apply without reloading the player, including adding rules after loading with an empty stylesheet, so unsaved JavaScript and DOM state survives. Production watch builds (`npm run build -- --watch`) also rebuild when story passages, `src/head-content.html` or raw media change, keeping the output and any enabled packages current.
+
 ## Head Content
 
 For things that need to go directly in `<head>` (meta tags, external scripts, analytics), edit `src/head-content.html`:

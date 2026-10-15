@@ -67,6 +67,8 @@ If you prefer working locally but want the containerized environment:
 
 The dev server starts on port 4321, which is automatically forwarded to your local machine.
 
+If port 4321 is already in use, the server selects another available port and prints its actual URL. Forward that port from the **Ports** panel in VS Code or Codespaces to open the story.
+
 ## Configuration
 
 The Dev Container is configured in `.devcontainer/devcontainer.json`:

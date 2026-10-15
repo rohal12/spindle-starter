@@ -83,7 +83,7 @@ function output(root: string) {
 function watch(root: string, actions: string) {
   writeFileSync(join(root, 'watch.mjs'), `
 import { build } from 'vite';
-import { readFileSync, writeFileSync } from 'node:fs';
+import { mkdirSync, readFileSync, rmSync, writeFileSync } from 'node:fs';
 const watcher = await build({ logLevel: 'silent', build: { watch: {}, emptyOutDir: false } });
 function nextBuild(change = () => {}) {
   return new Promise((resolve, reject) => {
@@ -182,4 +182,45 @@ test('watch builds replace stale CSS when rules are cleared or the last import i
   results.push(readFileSync('dist/index.html', 'utf8').includes('--author-marker'));
   `);
   expect(results).toEqual(['END', true, 'END', '', false, 'END', true, 'END', '', false]);
+}, 60000);
+
+test('watch builds track story and head edits, additions and removals independently', () => {
+  const root = fixture();
+  const results = watch(root, `
+  results.push(await nextBuild(() => writeFileSync('src/story/Start.twee',
+    ':: StoryTitle\\nFixture\\n\\n:: Start\\nwatched-story-content')));
+  results.push(readFileSync('dist/index.html', 'utf8').includes('watched-story-content'));
+  results.push(await nextBuild(() => writeFileSync('src/head-content.html',
+    '<meta name="watch-marker" content="updated">')));
+  results.push(readFileSync('dist/index.html', 'utf8').includes('name="watch-marker"'));
+  results.push(await nextBuild(() => {
+    mkdirSync('src/story/nested');
+    writeFileSync('src/story/nested/Added.tw', ':: Added\\nadded-passage-content');
+  }));
+  results.push(readFileSync('dist/index.html', 'utf8').includes('added-passage-content'));
+  results.push(await nextBuild(() => writeFileSync('src/story/nested/Added.tw',
+    ':: Added\\nupdated-passage-content')));
+  results.push(readFileSync('dist/index.html', 'utf8').includes('updated-passage-content'));
+  results.push(await nextBuild(() => rmSync('src/story/nested', { recursive: true })));
+  results.push(!readFileSync('dist/index.html', 'utf8').includes('updated-passage-content'));
+  `);
+  expect(results).toEqual(['END', 'END', true, 'END', true, 'END', true, 'END', true, 'END', true]);
+  expect(output(root).uploads.trim().split('\n')).toHaveLength(12);
+}, 60000);
+
+test('watch builds copy media additions, edits and removals without app changes', () => {
+  const root = fixture();
+  const results = watch(root, `
+  results.push(await nextBuild(() => {
+    mkdirSync('src/assets/media/nested');
+    writeFileSync('src/assets/media/nested/added.txt', 'first-media');
+  }));
+  results.push(readFileSync('dist/media/nested/added.txt', 'utf8'));
+  results.push(await nextBuild(() => writeFileSync('src/assets/media/nested/added.txt', 'updated-media')));
+  results.push(readFileSync('dist/media/nested/added.txt', 'utf8'));
+  results.push(await nextBuild(() => rmSync('src/assets/media/nested', { recursive: true })));
+  results.push((await import('node:fs')).existsSync('dist/media/nested'));
+  `);
+  expect(results).toEqual(['END', 'END', 'first-media', 'END', 'updated-media', 'END', false]);
+  expect(output(root).uploads.trim().split('\n')).toHaveLength(8);
 }, 60000);
