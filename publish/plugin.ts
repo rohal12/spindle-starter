@@ -24,8 +24,8 @@ export function spindlePublish(config: SpindlePublishConfig = {}): Plugin {
     name: 'vite-plugin-spindle-publish',
     apply: 'build',
 
-    // Run after the story compiler has written dist/index.html
-    closeBundle: {
+    // Publish only successful output, after the story compiler has finished.
+    writeBundle: {
       order: 'post',
       sequential: true,
       async handler() {

@@ -13,6 +13,8 @@ npm run preview
 
 `npm run build` compiles everything into `dist/` with optimizations enabled (CSS minification, no sourcemaps, test mode disabled). `npm run preview` serves that folder locally so you can check it before deploying.
 
+Publishing and packaging run only after both asset bundling and story compilation succeed. A failed build does not upload or package files left over from an earlier build.
+
 ## GitHub Pages
 
 ### Quick Start

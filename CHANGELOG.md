@@ -2,6 +2,8 @@
 
 ## Unreleased
 
+- Prevent failed asset or story builds from publishing or packaging stale output.
+- Clear deleted author styles in the development player when the stylesheet becomes empty or its last import is removed.
 - Generate distinct, stable IFIDs for degit copies nested inside another Git repository.
 - Skip native packaging for local web publishing and honor explicit itch channel overrides over configured defaults.
 - Use safe Tauri product names while preserving the story window title, and pass Windows packaging paths containing percent sequences without shell expansion.
