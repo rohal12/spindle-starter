@@ -7,7 +7,7 @@ import {
   readdirSync,
 } from 'fs';
 import { execSync, execFileSync } from 'child_process';
-import { resolve, join, dirname, basename } from 'path';
+import { resolve, join, dirname, basename, isAbsolute } from 'path';
 import type { BuildContext, Target } from '../types.js';
 import { copyDistAssets } from './copy-dist.js';
 import { tauriIdentifier, artifactName } from './identifier.js';
@@ -33,7 +33,7 @@ function checkPrerequisites(): void {
 function getBundleFlag(target: Target): string | null {
   switch (target) {
     case 'windows':
-      return null; // No bundling — grab portable .exe from target/release/
+      return null; // No bundling — collect the portable .exe
     case 'macos':
       return 'app';
     case 'linux':
@@ -51,6 +51,8 @@ function getBundleFlag(target: Target): string | null {
 function writePackConfig(ctx: BuildContext): void {
   const config = {
     productName: artifactName(ctx.config.name),
+    // Give the collector an exact filename instead of guessing among old .exes.
+    mainBinaryName: artifactName(ctx.config.name),
     version: ctx.config.version,
     identifier: tauriIdentifier(ctx.config.identifier),
     app: {
@@ -78,25 +80,28 @@ function generateIcons(ctx: BuildContext): void {
   npx(['@tauri-apps/cli@2', 'icon', resolveIcon(ctx)], TAURI_DIR);
 }
 
-function findOutput(target: Target, ctx: BuildContext): string {
-  const productName = artifactName(ctx.config.name);
-  const binaryName = productName.toLowerCase();
-  const releaseDir = join(SRC_TAURI, 'target', 'release');
+function resolveReleaseDir(): string {
+  // Match Tauri's Cargo working directory so relative environment overrides and
+  // .cargo/config.toml settings resolve the same way as the native build.
+  const metadata = JSON.parse(execFileSync('cargo', ['metadata', '--no-deps', '--format-version', '1'], {
+    cwd: SRC_TAURI,
+    encoding: 'utf8',
+  }));
+  if (typeof metadata.target_directory !== 'string' || !isAbsolute(metadata.target_directory)) {
+    throw new Error('[spindle-pack] Cargo metadata did not return an absolute target_directory');
+  }
+  // The commands below always use the release profile, without --target.
+  return join(metadata.target_directory, 'release');
+}
+
+function findOutput(target: Target, ctx: BuildContext, releaseDir: string): string {
   const bundleDir = join(releaseDir, 'bundle');
 
   switch (target) {
     case 'windows': {
-      // Grab the portable .exe from target/release/
-      const exe = join(releaseDir, `${binaryName}.exe`);
+      // Tauri renames the current main binary to the overlay's mainBinaryName.
+      const exe = join(releaseDir, `${artifactName(ctx.config.name)}.exe`);
       if (existsSync(exe)) return exe;
-      // Tauri may use productName directly
-      const altExe = join(releaseDir, `${productName}.exe`);
-      if (existsSync(altExe)) return altExe;
-      // Search for any .exe that isn't a build tool
-      const exes = readdirSync(releaseDir).filter(
-        (f) => f.endsWith('.exe') && !f.startsWith('build-script')
-      );
-      if (exes.length > 0) return join(releaseDir, exes[0]);
       throw new Error(`[spindle-pack] Could not find Windows executable in ${releaseDir}`);
     }
 
@@ -154,6 +159,7 @@ export async function buildTauri(target: Target, ctx: BuildContext): Promise<voi
   console.log(`[spindle-pack] Building ${target} executable via Tauri...`);
 
   checkPrerequisites();
+  const releaseDir = resolveReleaseDir();
   copyWebAssets(ctx);
   writePackConfig(ctx);
   generateIcons(ctx);
@@ -167,14 +173,14 @@ export async function buildTauri(target: Target, ctx: BuildContext): Promise<voi
   // For Windows, skip bundling — we use the portable .exe directly
   if (bundleFlag) {
     // Clear bundles from earlier builds so findOutput can't pick a stale one
-    rmSync(join(SRC_TAURI, 'target', 'release', 'bundle', bundleFlag === 'app' ? 'macos' : bundleFlag), {
+    rmSync(join(releaseDir, 'bundle', bundleFlag === 'app' ? 'macos' : bundleFlag), {
       recursive: true,
       force: true,
     });
     npx(['@tauri-apps/cli@2', 'bundle', '--bundles', bundleFlag, '--config', PACK_CONFIG], TAURI_DIR);
   }
 
-  const outputPath = findOutput(target, ctx);
+  const outputPath = findOutput(target, ctx, releaseDir);
   collectOutput(target, outputPath, ctx);
 
   console.log(`[spindle-pack] ${target} build complete.`);

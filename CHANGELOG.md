@@ -2,6 +2,7 @@
 
 ## Unreleased
 
+- Collect desktop artifacts and clean bundles in Cargo's configured target directory, and select the exact Windows main executable instead of an arbitrary older binary.
 - Preserve player state when CSS is added after loading with an empty author stylesheet.
 - Rebuild watched production output and opted-in packages when story, head content or media inputs change.
 - Print the actual development server URL when the preferred port is occupied.
