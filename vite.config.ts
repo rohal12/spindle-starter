@@ -126,7 +126,9 @@ export default defineConfig({
           if (name.endsWith(".css")) return "styles/app.bundle.css";
           if (/\.(woff2?|eot|ttf|otf)$/i.test(name))
             return "fonts/[name]-[hash][extname]";
-          return "assets/[name][extname]";
+          // Asset-only edits must change the inlined CSS/JS so the player
+          // receives an update and requests the replacement bytes.
+          return "assets/[name]-[hash][extname]";
         },
       },
     },
