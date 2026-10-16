@@ -49,17 +49,19 @@ test('an empty stylesheet becoming populated sends a CSS update', () => {
   expect(state.browser.reload).not.toHaveBeenCalled();
 });
 
-test('a changed font URL sends a CSS update without reloading the story', () => {
+test.each([
+  ['font', '@font-face { font-family: WatchFont; src: url(fonts/watch-font-HASH.woff2); }'],
+  ['image', 'body { background-image: url(assets/watch-image-HASH.svg); }'],
+])('a changed %s URL sends a CSS update without reloading the story', (_asset, css) => {
   const { onBuild } = state.watch.mock.calls[0][0];
-  const result = (url: string) => ({
+  const result = (hash: string) => ({
     diagnostics: [], stats: { passages: 1, words: 1 },
-    output: state.initialHtml.replace('</style>',
-      `@font-face { font-family: WatchFont; src: url(${url}); }</style>`),
+    output: state.initialHtml.replace('</style>', `${css.replace('HASH', hash)}</style>`),
   });
-  onBuild(result('fonts/watch-font-old.woff2'));
+  onBuild(result('old'));
   state.browser.sockets.emit.mockClear();
   state.browser.reload.mockClear();
-  onBuild(result('fonts/watch-font-new.woff2'));
+  onBuild(result('new'));
   expect(state.browser.sockets.emit).toHaveBeenCalledExactlyOnceWith('spindle:css');
   expect(state.browser.reload).not.toHaveBeenCalled();
 });

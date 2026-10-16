@@ -2,6 +2,7 @@
 
 ## Unreleased
 
+- Give bundled images and other non-font assets content hashes so replacements refresh the development player; CSS image updates preserve story state.
 - Honor Cargo build targets from environment and configuration when building, cleaning bundles and collecting desktop artifacts.
 - Materialize linked media files and directories so web output and archives remain usable without the source checkout.
 - Give emitted fonts content hashes so replacing a font refreshes the development player without resetting story state.

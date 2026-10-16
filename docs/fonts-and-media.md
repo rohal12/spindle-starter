@@ -66,6 +66,8 @@ In stylesheets, use a path relative to the SCSS file:
 }
 ```
 
+Vite bundles images referenced from SCSS, including images colocated with application code outside `src/assets/media/`. Emitted files in `dist/assets/` include a content hash, so changing only an image's contents updates its URL and refreshes the player. For images outside the raw media directory, this stylesheet update preserves story state. Keep using the source filename in SCSS; generated URLs remain relative for published subpaths and packaged stories.
+
 ## File Organization
 
 ```
