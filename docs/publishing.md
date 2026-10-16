@@ -80,6 +80,8 @@ Packaging derives safe artifact filenames from the story's display name. For exa
 
 Desktop packaging uses Cargo metadata to locate build artifacts, including when `CARGO_TARGET_DIR` or Cargo's `build.target-dir` setting overrides the output directory. The finished packages are still collected into `dist/pack/<platform>/`.
 
+Configured build targets also work: `CARGO_BUILD_TARGET` takes precedence over `build.target` in the nearest ancestor `.cargo/config` or `.cargo/config.toml`, followed by Cargo home configuration. If a target list is configured, packaging selects its first target, as Tauri does. The same target is passed to both the native build and bundler, and artifacts are collected from its target subdirectory.
+
 In desktop apps, exporting a save opens a native file picker. A dialog reports the saved path, cancellation or failure after the picker closes. External `http`, `https` and `mailto` links requesting a new window (including `window.open()`) open in the system browser or mail client while the story remains open.
 
 ## itch.io

@@ -7,18 +7,19 @@ import type { BuildContext } from '../pack/types.js';
 
 vi.mock('fs', () => ({
   cpSync: vi.fn(), mkdirSync: vi.fn(), rmSync: vi.fn(), writeFileSync: vi.fn(),
-  existsSync: vi.fn(), readdirSync: vi.fn(),
+  existsSync: vi.fn(), readdirSync: vi.fn(), readFileSync: vi.fn(),
 }));
 vi.mock('child_process', () => ({ execSync: vi.fn(), execFileSync: vi.fn() }));
 vi.mock('../pack/scripts/exec.js', () => ({ npx: vi.fn() }));
 vi.mock('../pack/scripts/icon.js', () => ({ resolveIcon: () => 'icon.png' }));
 vi.mock('../pack/scripts/copy-dist.js', () => ({ copyDistAssets: vi.fn() }));
 beforeEach(() => {
+  vi.stubEnv('CARGO_BUILD_TARGET', '');
   vi.mocked(execFileSync).mockReturnValue(JSON.stringify({
     target_directory: resolve('pack/tauri/src-tauri/target'),
   }));
 });
-afterEach(() => vi.resetAllMocks());
+afterEach(() => { vi.resetAllMocks(); vi.unstubAllEnvs(); });
 
 test.each(['Love/Hate', 'Part II: Awakening', 'What? "Now"', 'CON.txt'])(
   'desktop build sanitizes product name while keeping the window title: %s', async (name) => {

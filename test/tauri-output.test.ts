@@ -33,7 +33,11 @@ import assert from 'node:assert/strict';
 
 const srcTauri = resolve('pack/tauri/src-tauri');
 const targetDir = resolve(srcTauri, process.env.CARGO_TARGET_DIR);
-const releaseDir = join(targetDir, 'release');
+const releaseDir = join(targetDir, process.env.TEST_TRIPLE || '', 'release');
+if (process.env.TEST_TRIPLE) {
+  mkdirSync(join(targetDir, 'release'), { recursive: true });
+  writeFileSync(join(targetDir, 'release/Story.exe'), 'STALE UNQUALIFIED BUILD');
+}
 const bundleDir = join(releaseDir, 'bundle', process.env.TEST_TARGET === 'macos' ? 'macos' : 'appimage');
 const oldBundle = join(bundleDir, process.env.TEST_TARGET === 'macos' ? 'Old.app' : 'Old.AppImage');
 mkdirSync(bundleDir, { recursive: true });
@@ -57,6 +61,13 @@ childProcess.execFileSync = (command, args, options) => {
   assert.ok(command === 'npx' || command === process.execPath);
   if (command === process.execPath) args = args.slice(1);
   assert.equal(options.cwd, resolve('pack/tauri'));
+  if (args[1] === 'build' || args[1] === 'bundle') {
+    const targetIndex = args.indexOf('--target');
+    if (process.env.TEST_TRIPLE) {
+      assert.notEqual(targetIndex, -1, 'native build and bundle must receive the selected target');
+      assert.equal(args[targetIndex + 1], process.env.TEST_TRIPLE);
+    } else assert.equal(targetIndex, -1, 'unconfigured builds keep the default output layout');
+  }
   const overlay = JSON.parse(readFileSync('pack/tauri/pack.conf.json', 'utf8'));
   if (args[1] === 'build') {
     mkdirSync(releaseDir, { recursive: true });
@@ -83,12 +94,14 @@ await buildTauri(process.env.TEST_TARGET, {
   return { root, defaultDir };
 }
 
-function build(root: string, target: string, missingExe = false) {
+function build(root: string, target: string, options: { missingExe?: boolean; triple?: string; envTarget?: string; defaultHome?: boolean } = {}) {
   return execFileSync(process.execPath, ['--import', 'tsx', 'run.mts'], {
     cwd: root,
     // Cargo resolves relative environment overrides from src-tauri.
     env: { ...process.env, CARGO_TARGET_DIR: 'custom target $ %NAME%', TEST_TARGET: target,
-      TEST_MISSING_EXE: missingExe ? '1' : '' },
+      CARGO_HOME: options.defaultHome ? undefined : join(root, 'cargo-home'),
+      HOME: join(root, 'home'), USERPROFILE: join(root, 'home'), CARGO_BUILD_TARGET: options.envTarget ?? '',
+      TEST_TRIPLE: options.triple ?? '', TEST_MISSING_EXE: options.missingExe ? '1' : '' },
     stdio: 'pipe',
     timeout: 30000,
   });
@@ -105,6 +118,59 @@ test.each([
 
 test('fails when the expected Windows binary is missing, even with older or unrelated executables', () => {
   const { root } = fixture();
-  expect(() => build(root, 'windows', true)).toThrow(/Could not find Windows executable/);
+  expect(() => build(root, 'windows', { missingExe: true })).toThrow(/Could not find Windows executable/);
   expect(existsSync(join(root, 'dist/pack/windows/Story.exe'))).toBe(false);
+});
+
+function cargoConfig(root: string, path: string, contents: string) {
+  const dir = join(root, path);
+  mkdirSync(resolve(dir, '..'), { recursive: true });
+  writeFileSync(dir, contents);
+}
+
+test.each([
+  ['windows', 'Story.exe', 'x86_64-pc-windows-msvc'],
+  ['linux', 'Story.AppImage', 'x86_64-unknown-linux-gnu'],
+  ['macos', 'Story.app.zip', 'aarch64-apple-darwin'],
+])('collects the current %s build with an environment target', (target, artifact, triple) => {
+  const { root } = fixture();
+  build(root, target, { triple, envTarget: triple });
+  expect(readFileSync(join(root, 'dist/pack', target, artifact), 'utf8')).toBe('FRESH NATIVE BUILD');
+});
+
+test.each([
+  ['pack/tauri/src-tauri/.cargo/config.toml', '[build]\ntarget = "x86_64-pc-windows-msvc"'],
+  ['.cargo/config.toml', 'build.target = "x86_64-pc-windows-msvc"'],
+  ['.cargo/config', "[build]\ntarget = 'x86_64-pc-windows-msvc'"],
+  ['cargo-home/config.toml', '[build]\ntarget = [\n"x86_64-pc-windows-msvc",\n"aarch64-pc-windows-msvc",\n]'],
+])('collects a configured target from %s', (path, contents) => {
+  const { root } = fixture();
+  cargoConfig(root, path, contents);
+  build(root, 'windows', { triple: 'x86_64-pc-windows-msvc' });
+  expect(readFileSync(join(root, 'dist/pack/windows/Story.exe'), 'utf8')).toBe('FRESH NATIVE BUILD');
+});
+
+test('environment targets override config and select the first whitespace-separated target', () => {
+  const { root } = fixture();
+  cargoConfig(root, '.cargo/config.toml', '[build]\ntarget = "wrong-target"');
+  build(root, 'windows', { triple: 'x86_64-pc-windows-msvc',
+    envTarget: '  x86_64-pc-windows-msvc\taarch64-pc-windows-msvc ' });
+  expect(readFileSync(join(root, 'dist/pack/windows/Story.exe'), 'utf8')).toBe('FRESH NATIVE BUILD');
+});
+
+test('the nearest target config wins, preferring legacy config over config.toml', () => {
+  const { root } = fixture();
+  cargoConfig(root, '.cargo/config.toml', '[build]\ntarget = "wrong-ancestor"');
+  cargoConfig(root, 'pack/tauri/src-tauri/.cargo/config.toml', '[build]\ntarget = "wrong-extension"');
+  cargoConfig(root, 'pack/tauri/src-tauri/.cargo/config', '[build]\ntarget = "x86_64-pc-windows-msvc"');
+  cargoConfig(root, 'cargo-home/config.toml', '[build]\ntarget = "wrong-global"');
+  build(root, 'windows', { triple: 'x86_64-pc-windows-msvc' });
+  expect(readFileSync(join(root, 'dist/pack/windows/Story.exe'), 'utf8')).toBe('FRESH NATIVE BUILD');
+});
+
+test('collects a target configured in the default Cargo home without CARGO_HOME', () => {
+  const { root } = fixture();
+  cargoConfig(root, 'home/.cargo/config.toml', '[build]\ntarget = "x86_64-pc-windows-msvc"');
+  build(root, 'windows', { triple: 'x86_64-pc-windows-msvc', defaultHome: true });
+  expect(readFileSync(join(root, 'dist/pack/windows/Story.exe'), 'utf8')).toBe('FRESH NATIVE BUILD');
 });

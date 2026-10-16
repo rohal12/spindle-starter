@@ -2,6 +2,9 @@
 
 ## Unreleased
 
+- Honor Cargo build targets from environment and configuration when building, cleaning bundles and collecting desktop artifacts.
+- Materialize linked media files and directories so web output and archives remain usable without the source checkout.
+- Give emitted fonts content hashes so replacing a font refreshes the development player without resetting story state.
 - Collect desktop artifacts and clean bundles in Cargo's configured target directory, and select the exact Windows main executable instead of an arbitrary older binary.
 - Preserve player state when CSS is added after loading with an empty author stylesheet.
 - Rebuild watched production output and opted-in packages when story, head content or media inputs change.

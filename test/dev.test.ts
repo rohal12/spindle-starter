@@ -49,6 +49,21 @@ test('an empty stylesheet becoming populated sends a CSS update', () => {
   expect(state.browser.reload).not.toHaveBeenCalled();
 });
 
+test('a changed font URL sends a CSS update without reloading the story', () => {
+  const { onBuild } = state.watch.mock.calls[0][0];
+  const result = (url: string) => ({
+    diagnostics: [], stats: { passages: 1, words: 1 },
+    output: state.initialHtml.replace('</style>',
+      `@font-face { font-family: WatchFont; src: url(${url}); }</style>`),
+  });
+  onBuild(result('fonts/watch-font-old.woff2'));
+  state.browser.sockets.emit.mockClear();
+  state.browser.reload.mockClear();
+  onBuild(result('fonts/watch-font-new.woff2'));
+  expect(state.browser.sockets.emit).toHaveBeenCalledExactlyOnceWith('spindle:css');
+  expect(state.browser.reload).not.toHaveBeenCalled();
+});
+
 // Execute the exact browser snippet injected by the dev server. These small
 // DOM doubles model Spindle's conditional author-style creation at startup.
 async function player(css: string, hasAppliedStyle: boolean) {

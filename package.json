@@ -41,6 +41,7 @@
     "postcss-preset-env": "^11.6.1",
     "postcss-selector-parser": "^7.1.1",
     "sass": "^1.105.1",
+    "smol-toml": "^1.9.1",
     "tsx": "^4.23.15",
     "typescript": "^7.0.2",
     "vite": "^8.3.4",

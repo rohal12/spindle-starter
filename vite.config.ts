@@ -125,7 +125,7 @@ export default defineConfig({
           const name = assetInfo.name || "";
           if (name.endsWith(".css")) return "styles/app.bundle.css";
           if (/\.(woff2?|eot|ttf|otf)$/i.test(name))
-            return "fonts/[name][extname]";
+            return "fonts/[name]-[hash][extname]";
           return "assets/[name][extname]";
         },
       },

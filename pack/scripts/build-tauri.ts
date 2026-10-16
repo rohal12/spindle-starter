@@ -5,14 +5,17 @@ import {
   writeFileSync,
   existsSync,
   readdirSync,
+  readFileSync,
 } from 'fs';
 import { execSync, execFileSync } from 'child_process';
 import { resolve, join, dirname, basename, isAbsolute } from 'path';
+import { homedir } from 'os';
 import type { BuildContext, Target } from '../types.js';
 import { copyDistAssets } from './copy-dist.js';
 import { tauriIdentifier, artifactName } from './identifier.js';
 import { npx } from './exec.js';
 import { resolveIcon } from './icon.js';
+import { parse } from 'smol-toml';
 
 const TAURI_DIR = resolve(import.meta.dirname!, '../tauri');
 const SRC_TAURI = join(TAURI_DIR, 'src-tauri');
@@ -80,7 +83,33 @@ function generateIcons(ctx: BuildContext): void {
   npx(['@tauri-apps/cli@2', 'icon', resolveIcon(ctx)], TAURI_DIR);
 }
 
-function resolveReleaseDir(): string {
+/** Resolve Cargo targets using Tauri's precedence and first-target selection. */
+function resolveBuildTarget(): string | undefined {
+  const envTarget = process.env.CARGO_BUILD_TARGET?.trim().split(/\s+/)[0];
+  if (envTarget) return envTarget;
+
+  const configDirs: string[] = [];
+  for (let dir = SRC_TAURI; ; dir = dirname(dir)) {
+    configDirs.push(join(dir, '.cargo'));
+    if (dirname(dir) === dir) break;
+  }
+  configDirs.push(process.env.CARGO_HOME
+    ? resolve(SRC_TAURI, process.env.CARGO_HOME)
+    : join(homedir(), '.cargo'));
+
+  for (const dir of configDirs) {
+    // Cargo and Tauri prefer the legacy filename when both files exist.
+    const config = [join(dir, 'config'), join(dir, 'config.toml')].find(existsSync);
+    if (!config) continue;
+    const build = parse(readFileSync(config, 'utf8')).build;
+    if (!build || typeof build !== 'object' || Array.isArray(build) || !('target' in build)) continue;
+    const target = build.target;
+    if (typeof target === 'string') return target;
+    if (Array.isArray(target) && typeof target[0] === 'string') return target[0];
+  }
+}
+
+function resolveReleaseDir(buildTarget: string | undefined): string {
   // Match Tauri's Cargo working directory so relative environment overrides and
   // .cargo/config.toml settings resolve the same way as the native build.
   const metadata = JSON.parse(execFileSync('cargo', ['metadata', '--no-deps', '--format-version', '1'], {
@@ -90,8 +119,8 @@ function resolveReleaseDir(): string {
   if (typeof metadata.target_directory !== 'string' || !isAbsolute(metadata.target_directory)) {
     throw new Error('[spindle-pack] Cargo metadata did not return an absolute target_directory');
   }
-  // The commands below always use the release profile, without --target.
-  return join(metadata.target_directory, 'release');
+  // Even an explicitly configured host target adds a target subdirectory.
+  return join(metadata.target_directory, buildTarget ?? '', 'release');
 }
 
 function findOutput(target: Target, ctx: BuildContext, releaseDir: string): string {
@@ -159,7 +188,9 @@ export async function buildTauri(target: Target, ctx: BuildContext): Promise<voi
   console.log(`[spindle-pack] Building ${target} executable via Tauri...`);
 
   checkPrerequisites();
-  const releaseDir = resolveReleaseDir();
+  const buildTarget = resolveBuildTarget();
+  const targetArgs = buildTarget ? ['--target', buildTarget] : [];
+  const releaseDir = resolveReleaseDir(buildTarget);
   copyWebAssets(ctx);
   writePackConfig(ctx);
   generateIcons(ctx);
@@ -167,7 +198,7 @@ export async function buildTauri(target: Target, ctx: BuildContext): Promise<voi
   const bundleFlag = getBundleFlag(target);
 
   // Build the binary without bundling first
-  npx(['@tauri-apps/cli@2', 'build', '--no-bundle', '--config', PACK_CONFIG], TAURI_DIR);
+  npx(['@tauri-apps/cli@2', 'build', '--no-bundle', '--config', PACK_CONFIG, ...targetArgs], TAURI_DIR);
 
   // For macOS and Linux, run the bundler to produce .app / .AppImage
   // For Windows, skip bundling — we use the portable .exe directly
@@ -177,7 +208,7 @@ export async function buildTauri(target: Target, ctx: BuildContext): Promise<voi
       recursive: true,
       force: true,
     });
-    npx(['@tauri-apps/cli@2', 'bundle', '--bundles', bundleFlag, '--config', PACK_CONFIG], TAURI_DIR);
+    npx(['@tauri-apps/cli@2', 'bundle', '--bundles', bundleFlag, '--config', PACK_CONFIG, ...targetArgs], TAURI_DIR);
   }
 
   const outputPath = findOutput(target, ctx, releaseDir);
