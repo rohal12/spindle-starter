@@ -184,6 +184,41 @@ test('watch builds replace stale CSS when rules are cleared or the last import i
   expect(results).toEqual(['END', true, 'END', '', false, 'END', true, 'END', '', false]);
 }, 60000);
 
+test('watch builds refresh font URLs when only font bytes change and keep identical bytes stable', () => {
+  const root = fixture();
+  const font = join(root, 'src/assets/app/watch-font.woff2');
+  // Exceed Vite's inline limit so the stylesheet references an emitted file.
+  writeFileSync(font, Buffer.alloc(8192, 'a'));
+  writeFileSync(join(root, 'src/assets/app/styles/index.scss'),
+    '@font-face { font-family: WatchFont; src: url("../watch-font.woff2"); }');
+  const results = watch(root, `
+  function fontOutput(byte) {
+    const css = readFileSync('dist/styles/app.bundle.css', 'utf8');
+    const html = readFileSync('dist/index.html', 'utf8');
+    const url = css.match(/url\\(["']?([^"')]+)["']?\\)/)[1];
+    return { css, html, url, bytesMatch: readFileSync('dist/' + url).equals(Buffer.alloc(8192, byte)) };
+  }
+  results.push(fontOutput('a'));
+  results.push(await nextBuild(() => writeFileSync('src/assets/app/watch-font.woff2', Buffer.alloc(8192, 'b'))));
+  results.push(fontOutput('b'));
+  results.push(await nextBuild(() => writeFileSync('src/assets/app/watch-font.woff2', Buffer.alloc(8192, 'b'))));
+  results.push(fontOutput('b'));
+  `);
+  const [initialBuild, before, changedBuild, after, identicalBuild, identical] = results;
+  expect([initialBuild, changedBuild, identicalBuild]).toEqual(['END', 'END', 'END']);
+  for (const output of [before, after, identical]) {
+    expect(output.url).toMatch(/^fonts\/[^/]+\.woff2$/);
+    expect(output.html).toContain(output.url);
+    expect(output.bytesMatch).toBe(true);
+  }
+  expect(after.url).not.toBe(before.url);
+  expect(after.css).not.toBe(before.css);
+  expect(after.html).not.toBe(before.html);
+  expect(identical.url).toBe(after.url);
+  expect(identical.css).toBe(after.css);
+  expect(identical.html).toBe(after.html);
+}, 60000);
+
 test('watch builds track story and head edits, additions and removals independently', () => {
   const root = fixture();
   const results = watch(root, `

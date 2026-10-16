@@ -4,7 +4,8 @@ import { resolve } from "path";
 /**
  * Make dist/media/ an exact copy of src/assets/media/, so stories and head
  * content can use "media/..." URLs. (Vite's publicDir would copy the files to
- * the dist/ root.) Files removed from the source are removed from dist too.
+ * the dist/ root.) Symlinks are copied as their targets so dist is standalone.
+ * Files removed from the source are removed from dist too.
  */
 export function syncMedia(root: string): void {
   const src = resolve(root, "src/assets/media");
@@ -12,7 +13,9 @@ export function syncMedia(root: string): void {
   rmSync(dest, { recursive: true, force: true });
   if (existsSync(src)) {
     mkdirSync(dest, { recursive: true });
-    cpSync(src, dest, { recursive: true });
+    // A filter keeps Node's per-entry copy path: the native recursive fast
+    // path in Node 24 can preserve nested symlinks despite dereference: true.
+    cpSync(src, dest, { recursive: true, dereference: true, filter: () => true });
   }
 }
 

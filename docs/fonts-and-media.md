@@ -23,7 +23,7 @@ body {
 }
 ```
 
-The path is relative to the SCSS file's location (`src/assets/app/styles/`). Vite handles the font files automatically — they end up in `dist/fonts/` in the final build.
+The path is relative to the SCSS file's location (`src/assets/app/styles/`). Vite handles the font files automatically — they end up in `dist/fonts/` in the final build. Emitted filenames include a content hash, so replacing a font refreshes it during development while preserving player state. Continue referencing the source filename in SCSS.
 
 ::: tip
 Prefer `.woff2` files — they offer the best compression and are supported by all modern browsers.
@@ -32,6 +32,8 @@ Prefer `.woff2` files — they offer the best compression and are supported by a
 ## Images and Media
 
 Static files like images, audio, and video go in `src/assets/media/`. These are copied to `dist/media/` during build, keeping any subdirectories.
+
+Symlinks to media files or directories, including a linked `media/` directory, are copied as regular files and directories. Published output and packages include the asset contents and do not depend on the original link targets.
 
 During development, additions, changes and removals are copied automatically and reload the player. You can create, remove or replace the media directory while the server runs.
 
