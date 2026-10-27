@@ -11,6 +11,7 @@ const templateIfid = 'D674C58C-DEFA-4F70-B7A2-27742230C0FC';
 const files = {
   'docs/my-game-notes.md': 'Keep my notes',
   'CHANGELOG.md': 'My releases',
+  'UNLICENSE': 'Starter license',
   '.github/workflows/ci.yml': 'Starter CI workflow',
   '.github/workflows/codeql.yml': 'Starter CodeQL workflow',
   '.github/workflows/dependabot-auto-merge.yml': 'Starter Dependabot auto-merge',
@@ -23,6 +24,7 @@ const files = {
   '.github/SECURITY.md': 'Starter security policy',
   '.github/dependabot.yml': 'My Dependabot settings',
   'package.json': JSON.stringify({
+    license: 'Unlicense',
     scripts: { build: 'vite build', 'docs:build': 'vitepress build docs' },
     devDependencies: { vite: '*', vitepress: '*' },
   }),
@@ -126,6 +128,7 @@ test('explicit setup removes template tooling and preserves an existing story id
   execFileSync(process.execPath, [setup], { cwd: root });
   expect(() => readFileSync(join(root, 'docs/my-game-notes.md'))).toThrow();
   expect(() => readFileSync(join(root, 'CHANGELOG.md'))).toThrow();
+  expect(() => readFileSync(join(root, 'UNLICENSE'))).toThrow();
   const starterWorkflows = [
     'ci.yml', 'codeql.yml', 'dependabot-auto-merge.yml', 'deploy-docs.yml',
     'gradle-wrapper.yml', 'scorecard.yml', 'trigger-demo.yml', 'zizmor.yml',

@@ -7,6 +7,8 @@ for (const script of ["docs:dev", "docs:build", "docs:preview"]) {
   delete pkg.scripts?.[script];
 }
 delete pkg.devDependencies?.vitepress;
+// The starter's Unlicense is not the story's license
+delete pkg.license;
 
 rmSync("docs", { recursive: true, force: true });
 for (const workflow of ["ci", "codeql", "dependabot-auto-merge", "deploy-docs", "gradle-wrapper", "scorecard", "trigger-demo", "zizmor"]) {
@@ -14,6 +16,7 @@ for (const workflow of ["ci", "codeql", "dependabot-auto-merge", "deploy-docs", 
 }
 rmSync(".github/SECURITY.md", { force: true });
 rmSync("CHANGELOG.md", { force: true });
+rmSync("UNLICENSE", { force: true });
 writeFileSync("package.json", JSON.stringify(pkg, null, 2) + "\n");
-console.log("Removed starter documentation, template workflows, security policy and docs tooling.");
+console.log("Removed starter documentation, template workflows, security policy, license and docs tooling.");
 await import("./ifid.mjs");
