@@ -3,6 +3,8 @@
 # Each ecosystem gets one weekly PR for minor and patch updates, a separate PR
 # per major update, and grouped security updates. New releases wait a week
 # before Dependabot proposes them; security updates are not delayed.
+# workflows/dependabot-auto-merge.yml merges the *-minor-patch and *-security
+# group PRs once the required checks pass, so keep those group names.
 version: 2
 
 updates:
@@ -89,7 +91,7 @@ updates:
       prefix: ci
       include: scope
     groups:
-      actions:
+      actions-minor-patch:
         patterns: ["*"]
         update-types: [minor, patch]
       actions-security:

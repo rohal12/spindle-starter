@@ -1,0 +1,37 @@
+name: Dependabot auto-merge
+
+# Turns on auto-merge for Dependabot's grouped minor and patch updates and its
+# grouped security updates (the groups ending in -minor-patch and -security in
+# dependabot.yml). GitHub merges them once the main ruleset's required checks
+# and code scanning pass. Major updates stay manual.
+
+on:
+  pull_request:
+
+permissions: {}
+
+jobs:
+  auto-merge:
+    name: Enable auto-merge
+    # Template-only: projects made from the starter have no required checks
+    # that would hold the merge back
+    if: github.repository == 'rohal12/spindle-starter' && github.event.pull_request.user.login == 'dependabot[bot]'
+    runs-on: ubuntu-latest
+    permissions:
+      contents: write # merge the pull request
+      pull-requests: write # turn on auto-merge
+    steps:
+      # Also verifies that every commit on the branch is Dependabot's
+      - id: metadata
+        uses: dependabot/fetch-metadata@25dd0e34f4fe68f24cc83900b1fe3fe149efef98 # v3.1.0
+
+      - name: Enable auto-merge for grouped minor, patch and security updates
+        if: >-
+          (endsWith(steps.metadata.outputs.dependency-group, '-minor-patch')
+          || endsWith(steps.metadata.outputs.dependency-group, '-security'))
+          && (steps.metadata.outputs.update-type == 'version-update:semver-minor'
+          || steps.metadata.outputs.update-type == 'version-update:semver-patch')
+        env:
+          GH_TOKEN: ${{ github.token }}
+          PR_URL: ${{ github.event.pull_request.html_url }}
+        run: gh pr merge --auto --merge "$PR_URL"

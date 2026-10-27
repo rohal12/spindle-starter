@@ -9,7 +9,7 @@ for (const script of ["docs:dev", "docs:build", "docs:preview"]) {
 delete pkg.devDependencies?.vitepress;
 
 rmSync("docs", { recursive: true, force: true });
-for (const workflow of ["ci", "codeql", "deploy-docs", "gradle-wrapper", "scorecard", "trigger-demo", "zizmor"]) {
+for (const workflow of ["ci", "codeql", "dependabot-auto-merge", "deploy-docs", "gradle-wrapper", "scorecard", "trigger-demo", "zizmor"]) {
   rmSync(`.github/workflows/${workflow}.yml`, { force: true });
 }
 rmSync(".github/SECURITY.md", { force: true });
