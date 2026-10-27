@@ -39,7 +39,7 @@
     "postcss": "^8.5.31",
     "postcss-csso": "^6.0.1",
     "postcss-preset-env": "^11.6.1",
-    "postcss-selector-parser": "^7.1.1",
+    "postcss-selector-parser": "^7.1.7",
     "sass": "^1.105.2",
     "smol-toml": "^1.9.1",
     "tsx": "^4.23.15",
