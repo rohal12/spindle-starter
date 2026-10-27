@@ -36,11 +36,11 @@ cd my-story
 npm install
 ```
 
-This downloads everything the project needs — the Spindle story format, the twee-ts compiler, Vite, and other build tools. It also creates a symlink to the Spindle format so the compiler can find it.
+This downloads everything the project needs — the Spindle story format, the twee-ts compiler, Vite, and other build tools. It also creates a symlink to the Spindle format so the compiler can find it. npm installs the exact versions in `package-lock.json`, the ones the starter was tested with. Commit that file with your story.
 
 Installing preserves your documentation, changelog, workflows and package settings, including on repeat installs without Git. A degit copy gets its own stable story IFID automatically, including copies inside another Git repository; for a clone or GitHub template, run `npm run ifid` once.
 
-On a fresh copy, you can optionally run `npm run setup` to remove the starter's `docs/`, `CHANGELOG.md`, `UNLICENSE`, security policy, documentation/demo/CI workflows and docs tooling. Run this before adding your own documentation: it removes those paths. It also replaces the template IFID if needed, and preserves an existing story IFID.
+On a fresh copy, you can optionally run `npm run setup` to remove the starter's `docs/`, `CHANGELOG.md`, `UNLICENSE`, security policy, documentation/demo/CI workflows and docs tooling; it updates `package-lock.json` to match. Run this before adding your own documentation: it removes those paths. It also replaces the template IFID if needed, and preserves an existing story IFID.
 
 ## Start the Dev Server
 

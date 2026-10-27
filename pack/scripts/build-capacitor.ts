@@ -70,8 +70,8 @@ function installDeps(): void {
   // without the CLI, and every later build would fail on the missing file.
   if (!existsSync(CAP_CLI)) {
     console.log('[spindle-pack] Installing Capacitor dependencies...');
-    // No lockfile is committed (package-lock.json is gitignored), so npm ci can't be used
-    execSync('npm install --no-audit --no-fund', { cwd: CAP_DIR, stdio: 'inherit' });
+    // The versions in pack/capacitor/package-lock.json, as tested
+    execSync('npm ci --no-audit --no-fund', { cwd: CAP_DIR, stdio: 'inherit' });
     if (!existsSync(CAP_CLI)) {
       throw new Error(
         `[spindle-pack] Capacitor CLI is still missing after installing. ` +

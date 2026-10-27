@@ -1,5 +1,5 @@
 import { execFileSync } from 'node:child_process';
-import { mkdirSync, mkdtempSync, readFileSync, rmSync, writeFileSync } from 'node:fs';
+import { mkdirSync, mkdtempSync, readdirSync, readFileSync, rmSync, writeFileSync } from 'node:fs';
 import { tmpdir } from 'node:os';
 import { join, resolve } from 'node:path';
 import { afterEach, expect, test } from 'vitest';
@@ -150,4 +150,34 @@ test('explicit setup removes template tooling and preserves an existing story id
     scripts: { build: 'vite build' }, devDependencies: { vite: '*' },
   });
   expect(readFileSync(join(root, 'src/story/StoryData.twee'), 'utf8')).toBe(ownIfid);
+});
+
+test('explicit setup keeps the lockfile in step with package.json without installing', () => {
+  const root = fixture();
+  const entry = (name: string, version: string, extra = {}) => ({
+    version,
+    resolved: `https://registry.npmjs.org/${name}/-/${name}-${version}.tgz`,
+    integrity: `sha512-${'A'.repeat(86)}==`,
+    dev: true,
+    ...extra,
+  });
+  writeFileSync(join(root, 'package-lock.json'), JSON.stringify({
+    lockfileVersion: 3,
+    requires: true,
+    packages: {
+      '': { license: 'Unlicense', devDependencies: { vite: '*', vitepress: '*' } },
+      'node_modules/vite': entry('vite', '8.3.4'),
+      'node_modules/vitepress': entry('vitepress', '1.6.4', { dependencies: { vite: '*', 'docs-only': '*' } }),
+      'node_modules/docs-only': entry('docs-only', '1.0.0'),
+    },
+  }));
+  // Everything it needs is in the lockfile, so it must work offline
+  execFileSync(process.execPath, [setup], { cwd: root, env: { ...process.env, npm_config_offline: 'true' }, stdio: 'pipe' });
+  const lock = JSON.parse(readFileSync(join(root, 'package-lock.json'), 'utf8'));
+  expect(lock.packages['']).toMatchObject({ devDependencies: { vite: '*' } });
+  expect(lock.packages[''].devDependencies.vitepress).toBeUndefined();
+  expect(lock.packages[''].license).toBeUndefined();
+  expect(Object.keys(lock.packages).sort()).toEqual(['', 'node_modules/vite']);
+  expect(lock.packages['node_modules/vite'].version).toBe('8.3.4');
+  expect(() => readdirSync(join(root, 'node_modules'))).toThrow();
 });

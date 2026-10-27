@@ -1,9 +1,10 @@
 name: Dependencies
 
-# The starter commits no lockfiles, so GitHub's dependency graph sees only the
-# ranges in package.json and Cargo.toml, and nothing from Gradle: no transitive
-# package gets Dependabot alerts or dependency review. `snapshot` resolves the
-# npm and Cargo trees without installing them (scripts/dependency-snapshot.mjs)
+# GitHub's dependency graph reads the committed npm lockfiles (the root's and
+# pack/capacitor's) itself, but sees only the ranges in Cargo.toml (Cargo.lock
+# is not committed) and nothing from Gradle, so no transitive crate or Gradle
+# package would get Dependabot alerts or dependency review. `snapshot`
+# resolves the Cargo tree without building it (scripts/dependency-snapshot.mjs)
 # and `gradle` resolves the Android app's runtime classpaths; `submit` sends
 # both to the dependency submission API, so Dependabot alerts cover them. On a
 # pull request, `Dependency review` then fails when the change brings in a
@@ -28,7 +29,7 @@ concurrency:
 
 jobs:
   snapshot:
-    name: npm and Cargo snapshot
+    name: Cargo snapshot
     # Template-only
     if: github.repository == 'rohal12/spindle-starter'
     runs-on: ubuntu-latest
@@ -43,12 +44,9 @@ jobs:
         with:
           node-version: 24
 
-      # Writes package-lock.json and Cargo.lock only: nothing is installed or run
-      - name: Resolve the npm and Cargo trees
-        run: |
-          npm install --package-lock-only --ignore-scripts --no-audit --no-fund
-          (cd pack/capacitor && npm install --package-lock-only --ignore-scripts --no-audit --no-fund)
-          cargo metadata --format-version 1 --manifest-path pack/tauri/src-tauri/Cargo.toml > "$RUNNER_TEMP/cargo-metadata.json"
+      # Resolves the tree and writes Cargo.lock only: nothing is built or run
+      - name: Resolve the Cargo tree
+        run: cargo metadata --format-version 1 --manifest-path pack/tauri/src-tauri/Cargo.toml > "$RUNNER_TEMP/cargo-metadata.json"
 
       - name: List the resolved packages
         env:
@@ -56,8 +54,6 @@ jobs:
           SNAPSHOT_SHA: ${{ github.event.pull_request.head.sha }}
         run: |
           node scripts/dependency-snapshot.mjs \
-            --npm package.json=package-lock.json \
-            --npm pack/capacitor/package.json=pack/capacitor/package-lock.json \
             --cargo "pack/tauri/src-tauri/Cargo.toml=$RUNNER_TEMP/cargo-metadata.json" \
             > "$RUNNER_TEMP/snapshot.json"
 
@@ -94,9 +90,9 @@ jobs:
       # install provides the TypeScript that reads capacitor.config.ts
       - name: Prepare the Capacitor Android project
         run: |
-          npm install --ignore-scripts --no-audit --no-fund
+          npm ci --ignore-scripts --no-audit --no-fund
           cd pack/capacitor
-          npm install --ignore-scripts --no-audit --no-fund
+          npm ci --ignore-scripts --no-audit --no-fund
           mkdir -p web-assets && echo '<!doctype html>' > web-assets/index.html
           npx cap sync android
 
@@ -129,7 +125,7 @@ jobs:
           name: dependency-snapshot
           path: ${{ runner.temp }}/snapshot
 
-      - name: Submit the npm and Cargo snapshot
+      - name: Submit the Cargo snapshot
         if: needs.snapshot.result == 'success'
         env:
           GH_TOKEN: ${{ github.token }}
@@ -146,7 +142,7 @@ jobs:
           SNAPSHOT: ${{ needs.snapshot.result }}
           GRADLE: ${{ needs.gradle.result }}
         run: |
-          echo "::error::npm and Cargo snapshot: $SNAPSHOT, Gradle graph: $GRADLE"
+          echo "::error::Cargo snapshot: $SNAPSHOT, Gradle graph: $GRADLE"
           exit 1
 
   dependency-review:

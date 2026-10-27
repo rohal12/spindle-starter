@@ -40,7 +40,7 @@ That's it. The workflow at `.github/workflows/deploy-pages.yml` handles the rest
 The workflow (`.github/workflows/deploy-pages.yml`):
 
 1. Checks out your code
-2. Installs dependencies with `npm install`
+2. Installs the dependencies in `package-lock.json` with `npm ci`
 3. Lints the story with `npm run lint`
 4. Runs `npm run build` with `NODE_ENV=production`
 5. Uploads `dist/` to GitHub Pages
