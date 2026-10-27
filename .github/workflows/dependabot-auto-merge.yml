@@ -4,11 +4,20 @@ name: Dependabot auto-merge
 # grouped security updates (the groups ending in -minor-patch and -security in
 # dependabot.yml). GitHub merges them once the main ruleset's required checks
 # and code scanning pass. Major updates stay manual.
+#
+# A merge made with GITHUB_TOKEN starts no push workflows, so main's checks,
+# the dependency graph update and the demo build would not run for it. After
+# the merge this job dispatches them (workflow_dispatch is the exception),
+# unless push runs did start.
 
 on:
   pull_request:
 
 permissions: {}
+
+concurrency:
+  group: dependabot-auto-merge-${{ github.event.pull_request.number }}
+  cancel-in-progress: true
 
 jobs:
   auto-merge:
@@ -17,21 +26,49 @@ jobs:
     # that would hold the merge back
     if: github.repository == 'rohal12/spindle-starter' && github.event.pull_request.user.login == 'dependabot[bot]'
     runs-on: ubuntu-latest
+    timeout-minutes: 45
     permissions:
       contents: write # merge the pull request
       pull-requests: write # turn on auto-merge
+      actions: write # dispatch main's workflows after the merge
+    env:
+      GH_TOKEN: ${{ github.token }}
+      GH_REPO: ${{ github.repository }}
+      PR_URL: ${{ github.event.pull_request.html_url }}
     steps:
       # Also verifies that every commit on the branch is Dependabot's
       - id: metadata
         uses: dependabot/fetch-metadata@25dd0e34f4fe68f24cc83900b1fe3fe149efef98 # v3.1.0
 
       - name: Enable auto-merge for grouped minor, patch and security updates
+        id: enable
         if: >-
           (endsWith(steps.metadata.outputs.dependency-group, '-minor-patch')
           || endsWith(steps.metadata.outputs.dependency-group, '-security'))
           && (steps.metadata.outputs.update-type == 'version-update:semver-minor'
           || steps.metadata.outputs.update-type == 'version-update:semver-patch')
-        env:
-          GH_TOKEN: ${{ github.token }}
-          PR_URL: ${{ github.event.pull_request.html_url }}
         run: gh pr merge --auto --merge "$PR_URL"
+
+      - name: Run main's push workflows for the merge
+        if: steps.enable.outcome == 'success'
+        run: |
+          state=OPEN
+          for _ in $(seq 1 120); do
+            state=$(gh pr view "$PR_URL" --json state --jq .state)
+            [ "$state" != OPEN ] && break
+            sleep 20
+          done
+          if [ "$state" != MERGED ]; then
+            echo "Not merged ($state): nothing to run."
+            exit 0
+          fi
+          sha=$(gh pr view "$PR_URL" --json mergeCommit --jq .mergeCommit.oid)
+          sleep 30
+          if [ -n "$(gh run list --commit "$sha" --event push --json databaseId --jq '.[].databaseId')" ]; then
+            echo "Push workflows started for $sha."
+            exit 0
+          fi
+          for workflow in ci.yml codeql.yml zizmor.yml gradle-wrapper.yml dependencies.yml trigger-demo.yml; do
+            gh workflow run "$workflow" --ref main
+          done
+          echo "Dispatched main's workflows for $sha."

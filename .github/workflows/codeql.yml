@@ -6,6 +6,8 @@ on:
     branches: [main]
   schedule:
     - cron: "17 5 * * 1"
+  # Dependabot auto-merge runs it for a merge that started no push workflows
+  workflow_dispatch:
 
 permissions: {}
 
