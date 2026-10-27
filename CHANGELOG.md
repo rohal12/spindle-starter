@@ -2,6 +2,7 @@
 
 ## Unreleased
 
+- Add the starter's license, the Unlicense (`UNLICENSE`), matching `package.json`. `npm run setup` removes it and the `license` field, so your story is not released into the public domain unless you choose to.
 - Harden the GitHub workflows: pin actions to commit SHAs, grant each job only the permissions it needs, pass release tags and itch.io settings to scripts through environment variables, skip dependency caches in release and deploy builds, and stop persisting checkout credentials.
 - Add Dependabot configuration for npm, Cargo, Gradle, the dev container and GitHub Actions, with weekly grouped updates and a one-week cooldown for new releases.
 - `npm run setup` also removes the starter's CI, CodeQL, Dependabot auto-merge, Gradle wrapper, Scorecard and workflow-lint workflows and its security policy.
