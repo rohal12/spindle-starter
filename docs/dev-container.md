@@ -6,7 +6,7 @@ Spindle Starter includes a [Dev Container](https://containers.dev/) configuratio
 
 The Dev Container provides:
 
-- **Node.js 22** pre-installed
+- **Node.js 24** pre-installed
 - **Dependencies installed** automatically on creation (`npm install`)
 - **Port 4321 forwarded** — the dev server opens in your browser automatically
 - **VS Code extensions** — ESLint and Prettier pre-configured
@@ -75,7 +75,7 @@ The Dev Container is configured in `.devcontainer/devcontainer.json`:
 
 | Setting             | Value                                                | Purpose                                             |
 | ------------------- | ---------------------------------------------------- | --------------------------------------------------- |
-| `image`             | `mcr.microsoft.com/devcontainers/javascript-node:22` | Node.js 22 base image                               |
+| `image`             | `mcr.microsoft.com/devcontainers/javascript-node:24` | Node.js 24 base image                               |
 | `postCreateCommand` | `npm install`                                        | Installs dependencies when the container is created |
 | `forwardPorts`      | `[4321]`                                             | Forwards the dev server port                        |
 | `extensions`        | ESLint, Prettier                                     | Pre-installs useful VS Code extensions              |

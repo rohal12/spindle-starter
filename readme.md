@@ -30,7 +30,7 @@ The easiest starter kit for building [Spindle](https://rohal12.github.io/spindle
 
 ## Requirements
 
-- [Node.js](https://nodejs.org/en/) 22+
+- [Node.js](https://nodejs.org/en/) 24+
 
 ## Getting Started
 

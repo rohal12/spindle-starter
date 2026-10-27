@@ -4,11 +4,11 @@ This guide walks you through setting up Spindle Starter from scratch. By the end
 
 ## Prerequisites
 
-You need [Node.js](https://nodejs.org/) **22 or later**. Check your version:
+You need [Node.js](https://nodejs.org/) **24 or later**. Check your version:
 
 ```sh
 node --version
-# v22.x.x or higher
+# v24.x.x or higher
 ```
 
 If you don't have Node.js installed, download it from [nodejs.org](https://nodejs.org/) — the LTS version is fine.
