@@ -1,0 +1,35 @@
+# Advisories in Cargo.lock that no update can fix yet, and why they don't
+# affect the desktop app. OSV-Scanner and OpenSSF Scorecard read this file
+# next to the lockfile; any advisory not listed here is still reported. Each
+# exception expires so it is checked again; drop it once Tauri's crates move
+# past the affected version.
+
+[[IgnoredVulns]]
+id = "GHSA-qwgh-2vcv-g2f7"
+ignoreUntil = 2027-04-28
+reason = "block-buffer 0.10.4, through digest 0.10 and sha2 0.10 (tauri-codegen, wry). The cursor is corrupted only if a compression callback panics, the panic is caught and the buffer is used again; sha2's compression never panics and nothing in the tree catches a panic around hashing. Fixed only in block-buffer 0.12 (digest 0.11), which Tauri's crates don't use."
+
+[[IgnoredVulns]]
+id = "RUSTSEC-2024-0429"
+ignoreUntil = 2027-04-28
+reason = "glib 0.18.5 (GHSA-wrw7-89jp-8q8g), part of Tauri's GTK 3 stack. Only glib::VariantStrIter is unsound, and no crate in the tree uses it (no caller of VariantStrIter or Variant::array_iter_str). Fixed in glib 0.20, which the GTK 3 bindings can't use."
+
+[[IgnoredVulns]]
+id = "RUSTSEC-2024-0370"
+ignoreUntil = 2027-04-28
+reason = "proc-macro-error 1.0.4 is unmaintained (no vulnerability). A compile-time dependency of glib-macros 0.18 in Tauri's GTK 3 stack; it goes when that stack does."
+
+[[IgnoredVulns]]
+id = "RUSTSEC-2026-0370"
+ignoreUntil = 2027-04-28
+reason = "zvariant 5 is unmaintained as a separate crate (no vulnerability): zbus 6 absorbed it. It comes through zbus 5 from tauri-plugin-opener 2.7.2, the latest, which has not moved to zbus 6."
+
+[[IgnoredVulns]]
+id = "RUSTSEC-2026-0371"
+ignoreUntil = 2027-04-28
+reason = "zbus_names 4 is unmaintained as a separate crate (no vulnerability): zbus 6 absorbed it. It comes through zbus 5 from tauri-plugin-opener 2.7.2, the latest, which has not moved to zbus 6."
+
+[[IgnoredVulns]]
+id = "RUSTSEC-2026-0372"
+ignoreUntil = 2027-04-28
+reason = "zvariant_derive 5 is unmaintained as a separate crate (no vulnerability): zbus 6 absorbed it. It comes through zbus 5 from tauri-plugin-opener 2.7.2, the latest, which has not moved to zbus 6."
