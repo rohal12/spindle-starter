@@ -8,6 +8,9 @@ on:
         required: false
         default: "html5"
 
+permissions:
+  contents: read
+
 jobs:
   deploy:
     runs-on: ubuntu-latest
