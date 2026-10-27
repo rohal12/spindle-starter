@@ -14,10 +14,36 @@ on:
 permissions: {}
 
 jobs:
+  # Scorecard accepts the committed gradle-wrapper.jar only when
+  # gradle-wrapper.yml has already succeeded on the commit it scans; on a
+  # push both start together, and a busy runner queue let Scorecard win.
+  wait:
+    name: Wait for the Gradle wrapper check
+    if: github.repository == 'rohal12/spindle-starter' && github.event_name == 'push'
+    runs-on: ubuntu-latest
+    timeout-minutes: 15
+    permissions:
+      actions: read # read gradle-wrapper.yml's runs
+    env:
+      GH_TOKEN: ${{ github.token }}
+      GH_REPO: ${{ github.repository }}
+      SHA: ${{ github.sha }}
+    steps:
+      - run: |
+          for _ in $(seq 1 40); do
+            state=$(gh run list --workflow gradle-wrapper.yml --commit "$SHA" --json status,conclusion --jq '.[0] // {} | "\(.status)/\(.conclusion)"')
+            case "$state" in
+              completed/*) echo "Gradle wrapper check: $state"; exit 0 ;;
+            esac
+            sleep 20
+          done
+          echo "::warning::The Gradle wrapper check has not finished; Scorecard may report gradle-wrapper.jar"
+
   analysis:
     name: Scorecard analysis
-    # Template-only
-    if: github.repository == 'rohal12/spindle-starter'
+    needs: wait
+    # Template-only. Scheduled runs skip `wait`: the check finished long ago.
+    if: ${{ !cancelled() && github.repository == 'rohal12/spindle-starter' }}
     runs-on: ubuntu-latest
     permissions:
       contents: read
