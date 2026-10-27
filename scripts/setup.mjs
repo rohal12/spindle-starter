@@ -7,14 +7,18 @@ for (const script of ["docs:dev", "docs:build", "docs:preview"]) {
   delete pkg.scripts?.[script];
 }
 delete pkg.devDependencies?.vitepress;
+delete pkg.overrides?.vitepress;
+if (pkg.overrides && Object.keys(pkg.overrides).length === 0) delete pkg.overrides;
 // The starter's Unlicense is not the story's license
 delete pkg.license;
 
 rmSync("docs", { recursive: true, force: true });
-for (const workflow of ["ci", "codeql", "dependabot-auto-merge", "deploy-docs", "gradle-wrapper", "scorecard", "trigger-demo", "zizmor"]) {
+for (const workflow of ["ci", "codeql", "dependabot-auto-merge", "dependencies", "deploy-docs", "gradle-wrapper", "scorecard", "trigger-demo", "zizmor"]) {
   rmSync(`.github/workflows/${workflow}.yml`, { force: true });
 }
 rmSync(".github/SECURITY.md", { force: true });
+rmSync("scripts/dependency-snapshot.mjs", { force: true });
+rmSync("test/dependency-snapshot.test.ts", { force: true });
 rmSync("CHANGELOG.md", { force: true });
 rmSync("UNLICENSE", { force: true });
 writeFileSync("package.json", JSON.stringify(pkg, null, 2) + "\n");

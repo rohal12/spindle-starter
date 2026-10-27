@@ -15,6 +15,9 @@ const files = {
   '.github/workflows/ci.yml': 'Starter CI workflow',
   '.github/workflows/codeql.yml': 'Starter CodeQL workflow',
   '.github/workflows/dependabot-auto-merge.yml': 'Starter Dependabot auto-merge',
+  '.github/workflows/dependencies.yml': 'Starter dependency submission',
+  'scripts/dependency-snapshot.mjs': 'Starter dependency snapshot',
+  'test/dependency-snapshot.test.ts': 'Starter dependency snapshot test',
   '.github/workflows/deploy-docs.yml': 'My docs workflow',
   '.github/workflows/gradle-wrapper.yml': 'Starter wrapper validation',
   '.github/workflows/scorecard.yml': 'Starter Scorecard workflow',
@@ -27,6 +30,7 @@ const files = {
     license: 'Unlicense',
     scripts: { build: 'vite build', 'docs:build': 'vitepress build docs' },
     devDependencies: { vite: '*', vitepress: '*' },
+    overrides: { vitepress: { vite: '*' } },
   }),
 };
 
@@ -130,13 +134,15 @@ test('explicit setup removes template tooling and preserves an existing story id
   expect(() => readFileSync(join(root, 'CHANGELOG.md'))).toThrow();
   expect(() => readFileSync(join(root, 'UNLICENSE'))).toThrow();
   const starterWorkflows = [
-    'ci.yml', 'codeql.yml', 'dependabot-auto-merge.yml', 'deploy-docs.yml',
+    'ci.yml', 'codeql.yml', 'dependabot-auto-merge.yml', 'dependencies.yml', 'deploy-docs.yml',
     'gradle-wrapper.yml', 'scorecard.yml', 'trigger-demo.yml', 'zizmor.yml',
   ];
   for (const path of starterWorkflows) {
     expect(() => readFileSync(join(root, '.github/workflows', path))).toThrow();
   }
   expect(() => readFileSync(join(root, '.github/SECURITY.md'))).toThrow();
+  expect(() => readFileSync(join(root, 'scripts/dependency-snapshot.mjs'))).toThrow();
+  expect(() => readFileSync(join(root, 'test/dependency-snapshot.test.ts'))).toThrow();
   expect(readFileSync(join(root, '.github/workflows/deploy-pages.yml'), 'utf8')).toBe('My Pages workflow');
   expect(readFileSync(join(root, '.github/dependabot.yml'), 'utf8')).toBe('My Dependabot settings');
   expect(JSON.parse(readFileSync(join(root, 'package.json'), 'utf8'))).toEqual({
