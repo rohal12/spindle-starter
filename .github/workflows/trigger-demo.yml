@@ -9,6 +9,8 @@ on:
     branches: [main]
   release:
     types: [published]
+  # Dependabot auto-merge runs it for a merge that started no push workflows
+  workflow_dispatch:
 
 # The dispatch uses DEMO_DISPATCH_TOKEN, not GITHUB_TOKEN
 permissions: {}
