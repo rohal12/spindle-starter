@@ -4,7 +4,7 @@
 
 - Harden the GitHub workflows: pin actions to commit SHAs, grant each job only the permissions it needs, pass release tags and itch.io settings to scripts through environment variables, skip dependency caches in release and deploy builds, and stop persisting checkout credentials.
 - Add Dependabot configuration for npm, Cargo, Gradle, the dev container and GitHub Actions, with weekly grouped updates and a one-week cooldown for new releases.
-- `npm run setup` also removes the starter's CI, CodeQL, Gradle wrapper, Scorecard and workflow-lint workflows and its security policy.
+- `npm run setup` also removes the starter's CI, CodeQL, Dependabot auto-merge, Gradle wrapper, Scorecard and workflow-lint workflows and its security policy.
 - Give bundled images and other non-font assets content hashes so replacements refresh the development player; CSS image updates preserve story state.
 - Honor Cargo build targets from environment and configuration when building, cleaning bundles and collecting desktop artifacts.
 - Materialize linked media files and directories so web output and archives remain usable without the source checkout.
