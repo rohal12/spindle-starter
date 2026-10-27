@@ -87,8 +87,10 @@ async function player(css: string, hasAppliedStyle: boolean) {
     },
   };
   const options = state.browser.init.mock.calls[0][0];
-  const snippet = options.rewriteRules[0].fn(null, null, '');
-  runInNewContext(snippet.replace(/^<script>|<\/script>$/g, ''), {
+  const snippet: string = options.rewriteRules[0].fn(null, null, '');
+  // Unwrap the single inline script the server injects and run its body
+  expect(snippet.startsWith('<script>') && snippet.endsWith('</script>')).toBe(true);
+  runInNewContext(snippet.slice('<script>'.length, -'</script>'.length), {
     document, fetch,
     location: { href: 'http://localhost:4322', reload },
     window: { ___browserSync___: { socket: {

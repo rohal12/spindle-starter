@@ -66,10 +66,10 @@ test.each([
   syncMedia(projectRoot);
   const distDir = join(projectRoot, 'dist');
   const copied = join(distDir, 'media', entryName);
-  expect(lstatSync(copied).isFile()).toBe(true);
-  expect(lstatSync(dirname(copied)).isDirectory()).toBe(true);
   rmSync(original, { recursive: true });
   expect(readFileSync(copied)).toEqual(bytes);
+  expect(lstatSync(copied).isFile()).toBe(true);
+  expect(lstatSync(dirname(copied)).isDirectory()).toBe(true);
 
   const ctx: BuildContext = {
     projectRoot, distDir, outDir: join(distDir, 'pack'),
