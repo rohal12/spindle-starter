@@ -5,11 +5,15 @@ name: Dependencies
 # package gets Dependabot alerts or dependency review. `snapshot` resolves the
 # npm and Cargo trees without installing them (scripts/dependency-snapshot.mjs)
 # and `gradle` resolves the Android app's runtime classpaths; `submit` sends
-# both to the dependency submission API, so Dependabot alerts cover them.
+# both to the dependency submission API, so Dependabot alerts cover them. On a
+# pull request, `Dependency review` then fails when the change brings in a
+# package version with a known vulnerability of moderate severity or higher,
+# in any scope.
 
 on:
   push:
     branches: [main]
+  pull_request:
   # Catches up after releases upstream, which change what a fresh install gets
   schedule:
     - cron: "23 4 * * *"
@@ -19,7 +23,8 @@ on:
 permissions: {}
 
 concurrency:
-  group: dependencies-${{ github.ref }}
+  group: dependencies-${{ github.event.pull_request.number || github.ref }}
+  cancel-in-progress: ${{ github.event_name == 'pull_request' }}
 
 jobs:
   snapshot:
@@ -46,6 +51,9 @@ jobs:
           cargo metadata --format-version 1 --manifest-path pack/tauri/src-tauri/Cargo.toml > "$RUNNER_TEMP/cargo-metadata.json"
 
       - name: List the resolved packages
+        env:
+          # A pull request's snapshot is of its head commit, which dependency review compares
+          SNAPSHOT_SHA: ${{ github.event.pull_request.head.sha }}
         run: |
           node scripts/dependency-snapshot.mjs \
             --npm package.json=package-lock.json \
@@ -104,7 +112,11 @@ jobs:
   submit:
     name: Submit dependency graphs
     needs: [snapshot, gradle]
-    if: ${{ !cancelled() && github.repository == 'rohal12/spindle-starter' }}
+    # A pull request from a fork gets a token that cannot submit
+    if: >-
+      !cancelled()
+      && github.repository == 'rohal12/spindle-starter'
+      && (github.event_name != 'pull_request' || github.event.pull_request.head.repo.full_name == github.repository)
     runs-on: ubuntu-latest
     permissions:
       # The dependency submission API needs it. The job checks out nothing and
@@ -137,3 +149,21 @@ jobs:
           echo "::error::npm and Cargo snapshot: $SNAPSHOT, Gradle graph: $GRADLE"
           exit 1
 
+  dependency-review:
+    name: Dependency review
+    needs: submit
+    if: ${{ !cancelled() && github.repository == 'rohal12/spindle-starter' && github.event_name == 'pull_request' }}
+    runs-on: ubuntu-latest
+    permissions:
+      contents: read
+    steps:
+      - uses: actions/dependency-review-action@a1d282b36b6f3519aa1f3fc636f609c47dddb294 # v5.0.0
+        with:
+          fail-on-severity: moderate
+          # Everything the starter installs from npm is a dev dependency
+          fail-on-scopes: runtime, development, unknown
+          # glib 0.18 (Tauri's GTK 3 stack, no 0.20 there): nothing in the
+          # tree calls the unsound VariantStrIter; see Dependabot alert #2
+          allow-ghsas: GHSA-wrw7-89jp-8q8g
+          # Waits until GitHub has processed the snapshots `submit` sent
+          retry-on-snapshot-warnings: true
