@@ -7,6 +7,8 @@ for (const script of ["docs:dev", "docs:build", "docs:preview"]) {
   delete pkg.scripts?.[script];
 }
 delete pkg.devDependencies?.vitepress;
+delete pkg.overrides?.vitepress;
+if (pkg.overrides && Object.keys(pkg.overrides).length === 0) delete pkg.overrides;
 // The starter's Unlicense is not the story's license
 delete pkg.license;
 
