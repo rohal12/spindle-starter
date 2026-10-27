@@ -9,6 +9,7 @@ my-story/
 ├── .build/
 │   └── dev.ts               # Development server script
 ├── .github/
+│   ├── dependabot.yml        # Weekly dependency update pull requests
 │   └── workflows/
 │       ├── deploy-pages.yml  # GitHub Pages deployment
 │       └── deploy-itch.yml   # itch.io deployment
