@@ -4,6 +4,9 @@
   "description": "Modern Starter kit for Spindle",
   "main": "index.js",
   "type": "module",
+  "engines": {
+    "node": ">=24"
+  },
   "scripts": {
     "start": "npm run dev",
     "dev": "tsx .build/dev.ts",
