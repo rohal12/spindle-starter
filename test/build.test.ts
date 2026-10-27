@@ -118,7 +118,7 @@ afterEach(() => {
 test.each([
   ['unresolved import', 'src/assets/app/index.ts', 'import "./missing-module"; window.buildVersion = "new-app-build";'],
   ['SCSS error', 'src/assets/app/styles/index.scss', 'body { color: $undefined-color; }'],
-  ['story error', 'src/story/StoryData.twee', ':: StoryData\n{"ifid":"D674C58C-DEFA-4F70-B7A2-27742230C0FC","start":"Missing","format":"spindle","format-version":"0.59.30"}'],
+  ['story error', 'src/story/StoryData.twee', ':: StoryData\n{"ifid":"D674C58C-DEFA-4F70-B7A2-27742230C0FC","start":"Missing","format":"spindle","format-version":"0.64.7"}'],
 ])('%s cannot compile, publish or package stale assets', (_name, path, invalid) => {
   const root = fixture();
   build(root);
