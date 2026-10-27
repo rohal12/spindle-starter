@@ -68,7 +68,7 @@ jobs:
             echo "Push workflows started for $sha."
             exit 0
           fi
-          for workflow in ci.yml codeql.yml zizmor.yml gradle-wrapper.yml dependencies.yml trigger-demo.yml; do
+          for workflow in ci.yml codeql.yml zizmor.yml gradle-wrapper.yml pack.yml dependencies.yml trigger-demo.yml; do
             gh workflow run "$workflow" --ref main
           done
           echo "Dispatched main's workflows for $sha."

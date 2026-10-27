@@ -13,7 +13,7 @@ if (pkg.overrides && Object.keys(pkg.overrides).length === 0) delete pkg.overrid
 delete pkg.license;
 
 rmSync("docs", { recursive: true, force: true });
-for (const workflow of ["ci", "codeql", "dependabot-auto-merge", "dependencies", "deploy-docs", "gradle-wrapper", "scorecard", "trigger-demo", "zizmor"]) {
+for (const workflow of ["ci", "codeql", "dependabot-auto-merge", "dependencies", "deploy-docs", "gradle-wrapper", "pack", "scorecard", "trigger-demo", "zizmor"]) {
   rmSync(`.github/workflows/${workflow}.yml`, { force: true });
 }
 rmSync(".github/SECURITY.md", { force: true });
