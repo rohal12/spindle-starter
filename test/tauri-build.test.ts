@@ -3,6 +3,7 @@ import { execFileSync } from 'child_process';
 import { join, resolve } from 'path';
 import { afterEach, beforeEach, expect, test, vi } from 'vitest';
 import { buildTauri } from '../pack/scripts/build-tauri.js';
+import { npx } from '../pack/scripts/exec.js';
 import type { BuildContext } from '../pack/types.js';
 
 vi.mock('fs', () => ({
@@ -15,6 +16,7 @@ vi.mock('../pack/scripts/icon.js', () => ({ resolveIcon: () => 'icon.png' }));
 vi.mock('../pack/scripts/copy-dist.js', () => ({ copyDistAssets: vi.fn() }));
 beforeEach(() => {
   vi.stubEnv('CARGO_BUILD_TARGET', '');
+  vi.stubEnv('CI', '');
   vi.mocked(execFileSync).mockReturnValue(JSON.stringify({
     target_directory: resolve('pack/tauri/src-tauri/target'),
   }));
@@ -62,3 +64,21 @@ test('propagates Cargo metadata failures before copying or building', async () =
   expect(cpSync).not.toHaveBeenCalled();
   expect(writeFileSync).not.toHaveBeenCalled();
 });
+
+test.each([['true', true], ['1', true], ['', false], ['false', false]])(
+  'CI=%j builds against the committed Cargo.lock with --locked: %s', async (ci, locked) => {
+    vi.stubEnv('CI', ci);
+    const ctx: BuildContext = {
+      projectRoot: '/story', distDir: '/story/dist', outDir: '/story/dist/pack',
+      config: { name: 'Story', identifier: 'com.example.story', version: '1.0.0', icon: '',
+        targets: ['windows'], window: { width: 960, height: 600 } },
+    };
+    const executable = resolve('pack/tauri/src-tauri/target/release', 'Story.exe');
+    vi.mocked(existsSync).mockImplementation((path) => path === executable);
+    await buildTauri('windows', ctx);
+    const [build] = vi.mocked(npx).mock.calls.find(([args]) => args[1] === 'build')!;
+    expect(build.slice(0, 3)).toEqual(['@tauri-apps/cli@2', 'build', '--no-bundle']);
+    if (locked) expect(build.slice(-2)).toEqual(['--', '--locked']);
+    else expect(build).not.toContain('--locked');
+  },
+);

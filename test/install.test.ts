@@ -16,8 +16,6 @@ const files = {
   '.github/workflows/codeql.yml': 'Starter CodeQL workflow',
   '.github/workflows/dependabot-auto-merge.yml': 'Starter Dependabot auto-merge',
   '.github/workflows/dependencies.yml': 'Starter dependency submission',
-  'scripts/dependency-snapshot.mjs': 'Starter dependency snapshot',
-  'test/dependency-snapshot.test.ts': 'Starter dependency snapshot test',
   '.github/workflows/deploy-docs.yml': 'My docs workflow',
   '.github/workflows/gradle-wrapper.yml': 'Starter wrapper validation',
   '.github/workflows/pack.yml': 'Starter packaging check',
@@ -142,8 +140,6 @@ test('explicit setup removes template tooling and preserves an existing story id
     expect(() => readFileSync(join(root, '.github/workflows', path))).toThrow();
   }
   expect(() => readFileSync(join(root, '.github/SECURITY.md'))).toThrow();
-  expect(() => readFileSync(join(root, 'scripts/dependency-snapshot.mjs'))).toThrow();
-  expect(() => readFileSync(join(root, 'test/dependency-snapshot.test.ts'))).toThrow();
   expect(readFileSync(join(root, '.github/workflows/deploy-pages.yml'), 'utf8')).toBe('My Pages workflow');
   expect(readFileSync(join(root, '.github/dependabot.yml'), 'utf8')).toBe('My Dependabot settings');
   expect(JSON.parse(readFileSync(join(root, 'package.json'), 'utf8'))).toEqual({

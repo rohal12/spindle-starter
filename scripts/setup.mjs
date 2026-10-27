@@ -18,8 +18,6 @@ for (const workflow of ["ci", "codeql", "dependabot-auto-merge", "dependencies",
   rmSync(`.github/workflows/${workflow}.yml`, { force: true });
 }
 rmSync(".github/SECURITY.md", { force: true });
-rmSync("scripts/dependency-snapshot.mjs", { force: true });
-rmSync("test/dependency-snapshot.test.ts", { force: true });
 rmSync("CHANGELOG.md", { force: true });
 rmSync("UNLICENSE", { force: true });
 writeFileSync("package.json", JSON.stringify(pkg, null, 2) + "\n");
