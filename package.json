@@ -29,8 +29,8 @@
   "author": "Rohal12",
   "license": "Unlicense",
   "devDependencies": {
-    "@rohal12/spindle": "^0.59.30",
-    "@rohal12/spindle-lsp": "^0.13.0",
+    "@rohal12/spindle": "^0.61.6",
+    "@rohal12/spindle-lsp": "^0.15.5",
     "@rohal12/twee-ts": "^1.18.2",
     "@types/archiver": "^8.0.0",
     "@types/browser-sync": "^2.29.1",
