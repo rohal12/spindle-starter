@@ -95,7 +95,7 @@ TypeScript configuration with strict mode enabled. Scoped to `src/assets/app/` s
 
 ### `package-lock.json`
 
-The exact version of every package npm installs, written by npm. Commit it with your story: every install, CI build and release then gets the versions you tested. `npm install <package>` and Dependabot's update pull requests keep it up to date. The Android packaging project has its own, `pack/capacitor/package-lock.json`.
+The exact version of every package npm installs, written by npm. Commit it with your story: every install, CI build and release then gets the versions you tested. `npm install <package>` and Dependabot's update pull requests keep it up to date. The Android packaging project has its own, `pack/capacitor/package-lock.json`, and the desktop app's Rust crates are locked in `pack/tauri/src-tauri/Cargo.lock`.
 
 ## Generated Files
 

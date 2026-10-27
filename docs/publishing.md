@@ -78,6 +78,8 @@ For a local build, set `SPINDLE_KEYSTORE_PATH`, `SPINDLE_KEYSTORE_PASSWORD`, and
 
 Packaging derives safe artifact filenames from the story's display name. For example, `Love/Hate` produces `Love-Hate.apk` and `Love-Hate-joiplay.zip`; Windows device names such as `CON.txt` are prefixed with `_`. Desktop builds use the same safe name for Tauri's product name and keep the original title in the story window. Paths containing spaces, `$` or literal `%NAME%` sequences are passed unchanged to packaging tools, including on Windows.
 
+The desktop app's crate versions are locked in `pack/tauri/src-tauri/Cargo.lock`; commit it with your story. In CI (whenever `CI` is set, as on GitHub Actions) the desktop build passes `--locked` to Cargo, so it fails instead of updating `Cargo.lock` when `Cargo.toml` has changed without it. A local build updates `Cargo.lock` as usual; commit the change.
+
 Desktop packaging uses Cargo metadata to locate build artifacts, including when `CARGO_TARGET_DIR` or Cargo's `build.target-dir` setting overrides the output directory. The finished packages are still collected into `dist/pack/<platform>/`.
 
 Configured build targets also work: `CARGO_BUILD_TARGET` takes precedence over `build.target` in the nearest ancestor `.cargo/config` or `.cargo/config.toml`, followed by Cargo home configuration. If a target list is configured, packaging selects its first target, as Tauri does. The same target is passed to both the native build and bundler, and artifacts are collected from its target subdirectory.

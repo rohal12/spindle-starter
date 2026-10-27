@@ -83,6 +83,12 @@ function generateIcons(ctx: BuildContext): void {
   npx(['@tauri-apps/cli@2', 'icon', resolveIcon(ctx)], TAURI_DIR);
 }
 
+/** GitHub Actions and other CI services set CI; `CI=false` turns it off. */
+function isCI(): boolean {
+  const ci = process.env.CI?.trim().toLowerCase();
+  return !!ci && ci !== 'false' && ci !== '0';
+}
+
 /** Resolve Cargo targets using Tauri's precedence and first-target selection. */
 function resolveBuildTarget(): string | undefined {
   const envTarget = process.env.CARGO_BUILD_TARGET?.trim().split(/\s+/)[0];
@@ -196,9 +202,13 @@ export async function buildTauri(target: Target, ctx: BuildContext): Promise<voi
   generateIcons(ctx);
 
   const bundleFlag = getBundleFlag(target);
+  // CI builds exactly the crates in the committed Cargo.lock and fails if it
+  // is out of date, as npm ci does for package-lock.json. A local build may
+  // still update it after an edit to Cargo.toml.
+  const cargoArgs = isCI() ? ['--', '--locked'] : [];
 
   // Build the binary without bundling first
-  npx(['@tauri-apps/cli@2', 'build', '--no-bundle', '--config', PACK_CONFIG, ...targetArgs], TAURI_DIR);
+  npx(['@tauri-apps/cli@2', 'build', '--no-bundle', '--config', PACK_CONFIG, ...targetArgs, ...cargoArgs], TAURI_DIR);
 
   // For macOS and Linux, run the bundler to produce .app / .AppImage
   // For Windows, skip bundling — we use the portable .exe directly
