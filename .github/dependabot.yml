@@ -32,9 +32,6 @@ updates:
     directory: "/pack/tauri/src-tauri"
     schedule:
       interval: weekly
-    # Cargo.lock is not committed: keep the loose requirements and only raise
-    # them when a release falls outside them
-    versioning-strategy: increase-if-necessary
     cooldown:
       default-days: 7
     commit-message:
