@@ -25,7 +25,7 @@ jobs:
           # Release and deploy builds never restore a cache a PR could have written
           package-manager-cache: false
 
-      - run: npm install
+      - run: npm ci
 
       - run: npm run lint
 

@@ -50,7 +50,7 @@ jobs:
             exit 1
           fi
 
-      - run: npm install
+      - run: npm ci
 
       - name: Decode keystore
         if: env.KEYSTORE_BASE64 != ''

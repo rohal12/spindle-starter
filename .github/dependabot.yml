@@ -14,8 +14,8 @@ updates:
       - "/pack/capacitor"
     schedule:
       interval: weekly
-    # The starter does not commit lockfiles, so updates raise the minimum
-    # version in package.json
+    # Updates raise the minimum version in package.json as well as the
+    # version in package-lock.json, as the starter does by hand
     versioning-strategy: increase
     cooldown:
       default-days: 7

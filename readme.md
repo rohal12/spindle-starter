@@ -47,7 +47,7 @@ The easiest starter kit for building [Spindle](https://rohal12.github.io/spindle
    npm start
    ```
 
-Installs preserve project files. On a fresh copy, optionally run `npm run setup` before adding documentation to remove the starter's `docs/`, `CHANGELOG.md`, `UNLICENSE`, security policy, documentation/demo/CI workflows and docs tooling. Degit copies get a unique IFID during install; clones and GitHub templates should run `npm run ifid` once.
+Installs preserve project files. On a fresh copy, optionally run `npm run setup` before adding documentation to remove the starter's `docs/`, `CHANGELOG.md`, `UNLICENSE`, security policy, documentation/demo/CI workflows and docs tooling (`package-lock.json` is updated to match). Degit copies get a unique IFID during install; clones and GitHub templates should run `npm run ifid` once.
 
 ## Commands
 

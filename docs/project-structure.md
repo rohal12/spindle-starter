@@ -27,6 +27,7 @@ my-story/
 │   │   ├── StoryData.twee    # Story metadata
 │   │   └── Start.twee        # Starting passage
 │   └── head-content.html     # Extra HTML for <head>
+├── package-lock.json         # Exact dependency versions (commit it)
 ├── package.json
 ├── postcss.config.js         # CSS processing config
 ├── tsconfig.json             # TypeScript config
@@ -91,6 +92,10 @@ Enables modern CSS features via [postcss-preset-env](https://github.com/csstools
 ### `tsconfig.json`
 
 TypeScript configuration with strict mode enabled. Scoped to `src/assets/app/` so it only checks your application code.
+
+### `package-lock.json`
+
+The exact version of every package npm installs, written by npm. Commit it with your story: every install, CI build and release then gets the versions you tested. `npm install <package>` and Dependabot's update pull requests keep it up to date. The Android packaging project has its own, `pack/capacitor/package-lock.json`.
 
 ## Generated Files
 
