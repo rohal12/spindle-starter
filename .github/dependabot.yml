@@ -49,6 +49,13 @@ updates:
     directory: "/pack/capacitor/android"
     schedule:
       interval: weekly
+    # The Gradle wrapper and the Android Gradle plugin move together with
+    # Capacitor (`npx cap migrate`): Gradle 9.6 and later cannot load AGP 8
+    ignore:
+      - dependency-name: gradle-wrapper
+        update-types: ["version-update:semver-major"]
+      - dependency-name: com.android.tools.build:gradle
+        update-types: ["version-update:semver-major"]
     cooldown:
       default-days: 7
     commit-message:
