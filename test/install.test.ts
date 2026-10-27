@@ -20,6 +20,7 @@ const files = {
   'test/dependency-snapshot.test.ts': 'Starter dependency snapshot test',
   '.github/workflows/deploy-docs.yml': 'My docs workflow',
   '.github/workflows/gradle-wrapper.yml': 'Starter wrapper validation',
+  '.github/workflows/pack.yml': 'Starter packaging check',
   '.github/workflows/scorecard.yml': 'Starter Scorecard workflow',
   '.github/workflows/trigger-demo.yml': 'My demo workflow',
   '.github/workflows/zizmor.yml': 'Starter workflow lint',
@@ -135,7 +136,7 @@ test('explicit setup removes template tooling and preserves an existing story id
   expect(() => readFileSync(join(root, 'UNLICENSE'))).toThrow();
   const starterWorkflows = [
     'ci.yml', 'codeql.yml', 'dependabot-auto-merge.yml', 'dependencies.yml', 'deploy-docs.yml',
-    'gradle-wrapper.yml', 'scorecard.yml', 'trigger-demo.yml', 'zizmor.yml',
+    'gradle-wrapper.yml', 'pack.yml', 'scorecard.yml', 'trigger-demo.yml', 'zizmor.yml',
   ];
   for (const path of starterWorkflows) {
     expect(() => readFileSync(join(root, '.github/workflows', path))).toThrow();

@@ -1,0 +1,127 @@
+name: Pack
+
+# Packs the template's own story for every spindlePack target, as a project
+# that turns packaging on builds it. build-desktop.yml, build-android.yml and
+# build-joiplay.yml do that in projects made from the starter but skip
+# themselves here, where spindlePack is off, and the demo repository packs its
+# own story instead. Without a keystore the APK is a debug build.
+
+on:
+  pull_request:
+    paths:
+      - .build/**
+      - .github/workflows/pack.yml
+      - pack/**
+      - package.json
+      - postcss.config.js
+      - publish/**
+      - src/**
+      - vite.config.ts
+  push:
+    branches: [main]
+    paths:
+      - .build/**
+      - .github/workflows/pack.yml
+      - pack/**
+      - package.json
+      - postcss.config.js
+      - publish/**
+      - src/**
+      - vite.config.ts
+  # Dependabot auto-merge runs it for a merge that started no push workflows
+  workflow_dispatch:
+
+permissions: {}
+
+concurrency:
+  group: ${{ github.workflow }}-${{ github.ref }}
+  cancel-in-progress: ${{ github.event_name == 'pull_request' }}
+
+jobs:
+  pack:
+    name: Pack (${{ matrix.target }})
+    # Template-only: projects created from the starter use the build-*.yml workflows
+    if: github.repository == 'rohal12/spindle-starter'
+    strategy:
+      fail-fast: false
+      matrix:
+        include:
+          - { target: joiplay, os: ubuntu-latest }
+          - { target: android, os: ubuntu-latest }
+          - { target: linux, os: ubuntu-latest }
+          - { target: windows, os: windows-latest }
+          - { target: macos, os: macos-latest }
+    runs-on: ${{ matrix.os }}
+    permissions:
+      contents: read
+    defaults:
+      run:
+        shell: bash # windows-latest defaults to PowerShell
+    steps:
+      - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
+        with:
+          persist-credentials: false
+
+      - uses: actions/setup-node@949feb2413d6458794dcd2491c4babbbce0c15c1 # v7.1.0
+        with:
+          node-version: 24
+
+      # Desktop (Tauri): the same setup as build-desktop.yml
+      - name: Install the stable Rust toolchain
+        if: contains(fromJSON('["windows","macos","linux"]'), matrix.target)
+        run: |
+          rustup toolchain install stable --profile minimal --no-self-update
+          rustup default stable
+
+      - name: Install Linux dependencies
+        if: matrix.target == 'linux'
+        run: |
+          sudo apt-get update
+          sudo apt-get install -y libwebkit2gtk-4.1-dev libappindicator3-dev librsvg2-dev patchelf
+
+      # Android (Capacitor): the same setup as build-android.yml
+      - if: matrix.target == 'android'
+        uses: actions/setup-java@b843ebf9b913146b38da2eaa7aeddf76074ae1ad # v6.1.0
+        with:
+          distribution: temurin
+          java-version: 21
+
+      - if: matrix.target == 'android'
+        uses: android-actions/setup-android@be39fa834029ff78f1a44aa3bb0819b8fc2bd8fd # v4.0.4
+
+      - run: npm install
+
+      # What vite.config.ts's comment tells an author to add, kept out of the
+      # template itself. The icon falls back to favicon.svg.
+      - name: Turn on packaging
+        run: |
+          cat > vite.pack.config.ts <<'EOF'
+          import { defineConfig, mergeConfig } from "vite";
+          import base from "./vite.config.js";
+          import { spindlePack } from "./pack/plugin.js";
+
+          export default mergeConfig(base, defineConfig({
+            plugins: [
+              spindlePack({
+                name: "My Story",
+                identifier: "com.author.mystory",
+                icon: "src/assets/media/icon.png",
+                version: "1.0.0",
+                targets: ["windows", "macos", "linux", "android", "joiplay"],
+              }),
+            ],
+          }));
+          EOF
+
+      - name: Build the story and package it
+        run: npx vite build -c vite.pack.config.ts
+        env:
+          NODE_ENV: production
+          SPINDLE_PACK_TARGETS: ${{ matrix.target }}
+
+      - uses: actions/upload-artifact@cf430e030ddbb5b0abf93d22962f4752f3646cd9 # v7.0.2
+        with:
+          name: pack-${{ matrix.target }}
+          path: dist/pack/${{ matrix.target }}/
+          if-no-files-found: error
+          retention-days: 7
