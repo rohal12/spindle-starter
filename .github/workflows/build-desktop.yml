@@ -5,8 +5,7 @@ on:
   release:
     types: [published]
 
-permissions:
-  contents: write # needed to attach files to the release
+permissions: {}
 
 jobs:
   build:
@@ -27,15 +26,25 @@ jobs:
             artifact: dist/pack/linux/
 
     runs-on: ${{ matrix.os }}
+    permissions:
+      contents: write # needed to attach files to the release
 
     steps:
-      - uses: actions/checkout@v7
+      - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
+        with:
+          persist-credentials: false
 
-      - uses: actions/setup-node@v7
+      - uses: actions/setup-node@949feb2413d6458794dcd2491c4babbbce0c15c1 # v7.1.0
         with:
           node-version: 22
+          # Release and deploy builds never restore a cache a PR could have written
+          package-manager-cache: false
 
-      - uses: dtolnay/rust-toolchain@stable
+      - name: Install the stable Rust toolchain
+        shell: bash
+        run: |
+          rustup toolchain install stable --profile minimal --no-self-update
+          rustup default stable
 
       - name: Install Linux dependencies
         if: matrix.os == 'ubuntu-latest'
@@ -51,7 +60,7 @@ jobs:
           NODE_ENV: production
           SPINDLE_PACK_TARGETS: ${{ matrix.target }}
 
-      - uses: actions/upload-artifact@v7
+      - uses: actions/upload-artifact@cf430e030ddbb5b0abf93d22962f4752f3646cd9 # v7.0.2
         with:
           name: desktop-${{ matrix.target }}
           path: ${{ matrix.artifact }}
@@ -62,7 +71,9 @@ jobs:
         shell: bash # windows-latest defaults to PowerShell
         env:
           GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+          TAG: ${{ github.event.release.tag_name }}
+          ARTIFACT_DIR: ${{ matrix.artifact }}
         run: |
-          for file in ${{ matrix.artifact }}*; do
-            gh release upload "${{ github.event.release.tag_name }}" "$file" --clobber
+          for file in "$ARTIFACT_DIR"*; do
+            gh release upload "$TAG" "$file" --clobber
           done
