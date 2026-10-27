@@ -40,7 +40,7 @@
     "postcss-csso": "^6.0.1",
     "postcss-preset-env": "^11.6.1",
     "postcss-selector-parser": "^7.1.1",
-    "sass": "^1.105.1",
+    "sass": "^1.105.2",
     "smol-toml": "^1.9.1",
     "tsx": "^4.23.15",
     "typescript": "^7.0.2",
