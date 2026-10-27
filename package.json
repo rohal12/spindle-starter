@@ -28,6 +28,9 @@
   ],
   "author": "Rohal12",
   "license": "Unlicense",
+  "overrides": {
+    "happy-dom": "^21.0.4"
+  },
   "devDependencies": {
     "@rohal12/spindle": "^0.61.6",
     "@rohal12/spindle-lsp": "^0.15.5",
