@@ -24,9 +24,6 @@ jobs:
         with:
           persist-credentials: false
 
-      # The Android project commits gradle-wrapper.jar; make sure it is Gradle's
-      - uses: gradle/actions/wrapper-validation@3f5f9adaf7d9fecd50b5935e54106014257a94e6 # v6.4.0
-
       - uses: actions/setup-node@949feb2413d6458794dcd2491c4babbbce0c15c1 # v7.1.0
         with:
           node-version: 22

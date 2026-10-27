@@ -14,6 +14,7 @@ const files = {
   '.github/workflows/ci.yml': 'Starter CI workflow',
   '.github/workflows/codeql.yml': 'Starter CodeQL workflow',
   '.github/workflows/deploy-docs.yml': 'My docs workflow',
+  '.github/workflows/gradle-wrapper.yml': 'Starter wrapper validation',
   '.github/workflows/scorecard.yml': 'Starter Scorecard workflow',
   '.github/workflows/trigger-demo.yml': 'My demo workflow',
   '.github/workflows/zizmor.yml': 'Starter workflow lint',
@@ -124,7 +125,7 @@ test('explicit setup removes template tooling and preserves an existing story id
   execFileSync(process.execPath, [setup], { cwd: root });
   expect(() => readFileSync(join(root, 'docs/my-game-notes.md'))).toThrow();
   expect(() => readFileSync(join(root, 'CHANGELOG.md'))).toThrow();
-  for (const path of ['ci.yml', 'codeql.yml', 'deploy-docs.yml', 'scorecard.yml', 'trigger-demo.yml', 'zizmor.yml']) {
+  for (const path of ['ci.yml', 'codeql.yml', 'deploy-docs.yml', 'gradle-wrapper.yml', 'scorecard.yml', 'trigger-demo.yml', 'zizmor.yml']) {
     expect(() => readFileSync(join(root, '.github/workflows', path))).toThrow();
   }
   expect(() => readFileSync(join(root, '.github/SECURITY.md'))).toThrow();
