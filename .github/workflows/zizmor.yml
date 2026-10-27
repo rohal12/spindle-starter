@@ -2,14 +2,13 @@ name: Workflow lint
 
 # zizmor audits the workflows and dependabot.yml for security issues
 # (template injection, unpinned actions, broad permissions); findings go to
-# code scanning.
+# code scanning. It runs on every pull request, not only workflow changes:
+# the main ruleset requires its check and its code scanning results.
 
 on:
   pull_request:
-    paths: [".github/**"]
   push:
     branches: [main]
-    paths: [".github/**"]
 
 permissions: {}
 
