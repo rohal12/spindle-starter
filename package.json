@@ -29,7 +29,10 @@
   "author": "Rohal12",
   "license": "Unlicense",
   "overrides": {
-    "happy-dom": "^21.0.4"
+    "happy-dom": "^21.0.4",
+    "vitepress": {
+      "vite": "^6.4.5"
+    }
   },
   "devDependencies": {
     "@rohal12/spindle": "^0.61.6",

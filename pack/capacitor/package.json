@@ -2,6 +2,9 @@
   "name": "spindle-story-android",
   "private": true,
   "type": "module",
+  "overrides": {
+    "uuid": "^11.1.1"
+  },
   "dependencies": {
     "@capacitor/android": "^8.5.3",
     "@capacitor/cli": "^8.5.3",

@@ -30,6 +30,7 @@ const files = {
     license: 'Unlicense',
     scripts: { build: 'vite build', 'docs:build': 'vitepress build docs' },
     devDependencies: { vite: '*', vitepress: '*' },
+    overrides: { vitepress: { vite: '*' } },
   }),
 };
 

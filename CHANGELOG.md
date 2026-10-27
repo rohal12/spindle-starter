@@ -2,6 +2,7 @@
 
 ## Unreleased
 
+- Override two vulnerable transitive packages: VitePress 1.6.4 (the latest 1.x) runs on Vite 6.4.5 instead of Vite 5 and esbuild 0.21, which have development-server advisories, and the Android packaging's `@capacitor/cli` → `xcode` uses `uuid` 11.1.1 instead of 7.0.3. `npm run setup` drops the VitePress override with VitePress.
 - Add the starter's license, the Unlicense (`UNLICENSE`), matching `package.json`. `npm run setup` removes it and the `license` field, so your story is not released into the public domain unless you choose to.
 - Override `happy-dom` to 21.0.4 for the linter: on Node 22, npm installs `@rohal12/spindle-lsp` 0.15.7 (later releases need Node 24), which pins `happy-dom` 20.14.6, affected by [GHSA-834v-8h66-3h79](https://github.com/advisories/GHSA-834v-8h66-3h79).
 - Harden the GitHub workflows: pin actions to commit SHAs, grant each job only the permissions it needs, pass release tags and itch.io settings to scripts through environment variables, skip dependency caches in release and deploy builds, and stop persisting checkout credentials.
