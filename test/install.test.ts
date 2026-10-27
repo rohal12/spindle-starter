@@ -11,8 +11,15 @@ const templateIfid = 'D674C58C-DEFA-4F70-B7A2-27742230C0FC';
 const files = {
   'docs/my-game-notes.md': 'Keep my notes',
   'CHANGELOG.md': 'My releases',
+  '.github/workflows/ci.yml': 'Starter CI workflow',
+  '.github/workflows/codeql.yml': 'Starter CodeQL workflow',
   '.github/workflows/deploy-docs.yml': 'My docs workflow',
+  '.github/workflows/scorecard.yml': 'Starter Scorecard workflow',
   '.github/workflows/trigger-demo.yml': 'My demo workflow',
+  '.github/workflows/zizmor.yml': 'Starter workflow lint',
+  '.github/workflows/deploy-pages.yml': 'My Pages workflow',
+  '.github/SECURITY.md': 'Starter security policy',
+  '.github/dependabot.yml': 'My Dependabot settings',
   'package.json': JSON.stringify({
     scripts: { build: 'vite build', 'docs:build': 'vitepress build docs' },
     devDependencies: { vite: '*', vitepress: '*' },
@@ -117,9 +124,12 @@ test('explicit setup removes template tooling and preserves an existing story id
   execFileSync(process.execPath, [setup], { cwd: root });
   expect(() => readFileSync(join(root, 'docs/my-game-notes.md'))).toThrow();
   expect(() => readFileSync(join(root, 'CHANGELOG.md'))).toThrow();
-  for (const path of ['deploy-docs.yml', 'trigger-demo.yml']) {
+  for (const path of ['ci.yml', 'codeql.yml', 'deploy-docs.yml', 'scorecard.yml', 'trigger-demo.yml', 'zizmor.yml']) {
     expect(() => readFileSync(join(root, '.github/workflows', path))).toThrow();
   }
+  expect(() => readFileSync(join(root, '.github/SECURITY.md'))).toThrow();
+  expect(readFileSync(join(root, '.github/workflows/deploy-pages.yml'), 'utf8')).toBe('My Pages workflow');
+  expect(readFileSync(join(root, '.github/dependabot.yml'), 'utf8')).toBe('My Dependabot settings');
   expect(JSON.parse(readFileSync(join(root, 'package.json'), 'utf8'))).toEqual({
     scripts: { build: 'vite build' }, devDependencies: { vite: '*' },
   });
