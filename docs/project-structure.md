@@ -113,7 +113,7 @@ This file is required by every Twine story. It contains metadata that the compil
 {
   "ifid": "D674C58C-DEFA-4F70-B7A2-27742230C0FC",
   "format": "spindle",
-  "format-version": "0.59.30"
+  "format-version": "0.64.7"
 }
 ```
 
