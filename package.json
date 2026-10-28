@@ -39,7 +39,7 @@
   "devDependencies": {
     "@rohal12/spindle": "^0.64.7",
     "@rohal12/spindle-lsp": "^0.15.33",
-    "@rohal12/twee-ts": "^2.0.0",
+    "@rohal12/twee-ts": "^2.1.0",
     "@types/archiver": "^8.0.0",
     "@types/browser-sync": "^2.29.1",
     "archiver": "^8.0.0",
