@@ -24,19 +24,65 @@ jobs:
     strategy:
       fail-fast: false
       matrix:
-        # Build tooling, the Tauri shell, the Capacitor Android project and the
-        # workflows. None of them need a build for analysis.
-        language: [actions, java-kotlin, javascript-typescript, rust]
+        # The workflows, build tooling and the Tauri shell need no build for
+        # analysis. The Capacitor Android project does: without one, CodeQL
+        # cannot resolve the Android SDK, the AndroidX libraries (AARs) or
+        # Capacitor (a Gradle project in node_modules), and finds the call
+        # target of fewer than half the calls.
+        include:
+          - { language: actions, build-mode: none }
+          - { language: java-kotlin, build-mode: manual }
+          - { language: javascript-typescript, build-mode: none }
+          - { language: rust, build-mode: none }
     steps:
       - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
         with:
           persist-credentials: false
 
+      # Android: the same setup as dependencies.yml's Gradle job
+      - if: matrix.language == 'java-kotlin'
+        uses: actions/setup-node@949feb2413d6458794dcd2491c4babbbce0c15c1 # v7.1.0
+        with:
+          node-version: 24
+
+      - if: matrix.language == 'java-kotlin'
+        uses: actions/setup-java@b843ebf9b913146b38da2eaa7aeddf76074ae1ad # v6.1.0
+        with:
+          distribution: temurin
+          java-version: 21
+
+      # Capacitor's modules are compiled before CodeQL starts watching the
+      # build: the app compiles against their classes, but CodeQL does not
+      # analyze Capacitor's own sources
+      - name: Prepare the Capacitor Android project
+        if: matrix.language == 'java-kotlin'
+        run: |
+          npm ci --ignore-scripts --no-audit --no-fund
+          cd pack/capacitor
+          npm ci --ignore-scripts --no-audit --no-fund
+          mkdir -p web-assets && echo '<!doctype html>' > web-assets/index.html
+          npx cap sync android
+          cd android
+          ./gradlew --no-daemon :capacitor-android:compileDebugJavaWithJavac :capacitor-cordova-android-plugins:compileDebugJavaWithJavac
+
       - uses: github/codeql-action/init@9b3254085494b55a0f7c4c2b3d2d52cc712ce370 # v4.39.1
         with:
           languages: ${{ matrix.language }}
-          build-mode: none
+          build-mode: ${{ matrix.build-mode }}
           queries: security-and-quality
+
+      # The app's own sources and tests; -x keeps Capacitor's out even when
+      # Gradle considers its compiled classes out of date
+      - name: Compile the Android app
+        if: matrix.language == 'java-kotlin'
+        working-directory: pack/capacitor/android
+        run: >-
+          ./gradlew --no-daemon
+          :app:compileDebugJavaWithJavac
+          :app:compileDebugUnitTestJavaWithJavac
+          :app:compileDebugAndroidTestJavaWithJavac
+          -x :capacitor-android:compileDebugJavaWithJavac
+          -x :capacitor-cordova-android-plugins:compileDebugJavaWithJavac
 
       - uses: github/codeql-action/analyze@9b3254085494b55a0f7c4c2b3d2d52cc712ce370 # v4.39.1
         with:
