@@ -12,6 +12,7 @@ const files = {
   'docs/my-game-notes.md': 'Keep my notes',
   'CHANGELOG.md': 'My releases',
   'UNLICENSE': 'Starter license',
+  'osv-scanner.toml': 'Starter OSV-Scanner exceptions',
   '.github/workflows/ci.yml': 'Starter CI workflow',
   '.github/workflows/codeql.yml': 'Starter CodeQL workflow',
   '.github/workflows/dependabot-auto-merge.yml': 'Starter Dependabot auto-merge',
@@ -132,6 +133,7 @@ test('explicit setup removes template tooling and preserves an existing story id
   expect(() => readFileSync(join(root, 'docs/my-game-notes.md'))).toThrow();
   expect(() => readFileSync(join(root, 'CHANGELOG.md'))).toThrow();
   expect(() => readFileSync(join(root, 'UNLICENSE'))).toThrow();
+  expect(() => readFileSync(join(root, 'osv-scanner.toml'))).toThrow();
   const starterWorkflows = [
     'ci.yml', 'codeql.yml', 'dependabot-auto-merge.yml', 'dependencies.yml', 'deploy-docs.yml',
     'gradle-wrapper.yml', 'pack.yml', 'scorecard.yml', 'trigger-demo.yml', 'zizmor.yml',

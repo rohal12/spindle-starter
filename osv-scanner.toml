@@ -1,0 +1,11 @@
+# An advisory in package-lock.json that no update can fix yet, and why it
+# doesn't affect the starter. OSV-Scanner and OpenSSF Scorecard read this file
+# next to the lockfile; any advisory not listed here is still reported. The
+# exception expires so it is checked again; drop it once readdir-glob moves to
+# minimatch 11. `npm run setup` removes this file: a story's project decides
+# its own exceptions.
+
+[[IgnoredVulns]]
+id = "GHSA-g3hv-75wg-m249"
+ignoreUntil = 2027-05-07
+reason = "minimatch 10.2.6, only through archiver 8.0.0 and readdir-glob 3.0.0, the latest of each; readdir-glob needs minimatch ^10.2.2 and every 10.x is affected. The advisory needs attacker-controlled patterns and optimizationLevel 2 or higher. The starter's only use is archive.glob('**/*', { ignore: ['pack/**'] }) in pack/scripts/build-joiplay.ts: fixed patterns, and neither archiver nor readdir-glob sets optimizationLevel, so it stays at the default of 1."

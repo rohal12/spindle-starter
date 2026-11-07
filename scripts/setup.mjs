@@ -20,6 +20,7 @@ for (const workflow of ["ci", "codeql", "dependabot-auto-merge", "dependencies",
 rmSync(".github/SECURITY.md", { force: true });
 rmSync("CHANGELOG.md", { force: true });
 rmSync("UNLICENSE", { force: true });
+rmSync("osv-scanner.toml", { force: true });
 writeFileSync("package.json", JSON.stringify(pkg, null, 2) + "\n");
 // The project keeps the starter's lockfile: drop what package.json no longer
 // lists (VitePress and its tree, the overrides, the license) so the two stay
@@ -27,5 +28,5 @@ writeFileSync("package.json", JSON.stringify(pkg, null, 2) + "\n");
 if (existsSync("package-lock.json")) {
   execSync("npm install --package-lock-only --ignore-scripts --no-audit --no-fund", { stdio: "inherit" });
 }
-console.log("Removed starter documentation, template workflows, security policy, license and docs tooling.");
+console.log("Removed starter documentation, template workflows, security policy, OSV-Scanner exceptions, license and docs tooling.");
 await import("./ifid.mjs");
