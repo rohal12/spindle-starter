@@ -7,7 +7,7 @@ import { reportDiagnostics } from "./diagnostics.js";
 import { watchMedia } from "./media.js";
 
 // Vite's build() sets NODE_ENV to "production" when it is unset, which would
-// disable test mode, sourcemaps and unminified CSS for every rebuild below.
+// disable test mode and sourcemaps for every rebuild below.
 process.env.NODE_ENV ??= "development";
 
 // Colors for console output

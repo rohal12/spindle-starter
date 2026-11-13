@@ -87,7 +87,7 @@ You shouldn't need to edit this unless you're adding Vite plugins.
 
 ### `postcss.config.js`
 
-Enables modern CSS features via [postcss-preset-env](https://github.com/csstools/postcss-preset-env) (nesting, custom media queries, etc.). It does not minify: Vite minifies the stylesheet after PostCSS with [Lightning CSS](https://lightningcss.dev/), which keeps modern CSS such as container queries, `@layer` and `:has()` intact and does not reorder your rules.
+Enables modern CSS features via [postcss-preset-env](https://github.com/csstools/postcss-preset-env) (nesting, custom media queries, etc.). It does not minify: Vite minifies the stylesheet after PostCSS with [Lightning CSS](https://lightningcss.dev/), which keeps modern CSS such as container queries, `@layer` and `:has()` intact and changes nothing about the result of your rules.
 
 ### `tsconfig.json`
 

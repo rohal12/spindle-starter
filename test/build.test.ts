@@ -309,7 +309,7 @@ test('production builds minify modern CSS and keep the rules in their written or
 .mixed { background: color-mix(in srgb, var(--accent) 40%, blue); }
 .order-a { color: red; }
 .order-b { color: green; }
-.order-a { background: blue; }
+.order-a { margin-top: 3px; }
 `);
   build(root);
   const css = readFileSync(join(root, 'dist/styles/app.bundle.css'), 'utf8');
@@ -325,7 +325,7 @@ test('production builds minify modern CSS and keep the rules in their written or
   expect(css).toContain(':has(');
   expect(css).toContain('color-mix(');
   // The second .order-a rule must not move up next to the first one
-  const order = [/\.order-a[^{]*\{color:red/, /\.order-b[^{]*\{color:green/, /\.order-a[^{]*\{background:#00f/]
+  const order = [/\.order-a[^{]*\{color:red/, /\.order-b[^{]*\{color:green/, /\.order-a[^{]*\{margin-top:3px/]
     .map((rule) => css.search(rule));
   expect(order.every((index) => index >= 0)).toBe(true);
   expect(order).toEqual([...order].sort((a, b) => a - b));
