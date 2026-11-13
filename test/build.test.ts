@@ -296,3 +296,39 @@ test('watch builds copy media additions, edits and removals without app changes'
   expect(results).toEqual(['END', 'END', 'first-media', 'END', 'updated-media', 'END', false]);
   expect(output(root).uploads.trim().split('\n')).toHaveLength(8);
 }, 60000);
+
+test('production builds minify modern CSS and keep the rules in their written order', () => {
+  const root = fixture();
+  writeFileSync(join(root, 'src/assets/app/styles/index.scss'), `
+@layer base, theme;
+@layer base { .layered { margin: 0; } }
+@layer theme { .layered { margin: 4px; } }
+.card { container: card / inline-size; }
+@container card (max-width: 17rem) { .container-marker { display: none; } }
+.parent:has(> .child) { --has-marker: 1; }
+.mixed { background: color-mix(in srgb, var(--accent) 40%, blue); }
+.order-a { color: red; }
+.order-b { color: green; }
+.order-a { background: blue; }
+`);
+  build(root);
+  const css = readFileSync(join(root, 'dist/styles/app.bundle.css'), 'utf8');
+  // Minified: no indentation or line breaks between rules
+  expect(css).not.toMatch(/\n\s/);
+  // The cascade layers keep their order (postcss-preset-env may flatten them
+  // for older browsers, so check the rules rather than the @layer syntax)
+  expect(css.indexOf('.layered{margin:0}')).toBeGreaterThanOrEqual(0);
+  expect(css.indexOf('margin:4px')).toBeGreaterThan(css.indexOf('.layered{margin:0}'));
+  expect(css).toMatch(/\.card[^{]*\{container:card\s?\/\s?inline-size\}/);
+  // The query itself may be rewritten into the range syntax: (width<=17rem)
+  expect(css).toMatch(/@container card \([^)]*17rem\)\{\.container-marker[^{]*\{display:none\}\}/);
+  expect(css).toContain(':has(');
+  expect(css).toContain('color-mix(');
+  // The second .order-a rule must not move up next to the first one
+  const order = [/\.order-a[^{]*\{color:red/, /\.order-b[^{]*\{color:green/, /\.order-a[^{]*\{background:#00f/]
+    .map((rule) => css.search(rule));
+  expect(order.every((index) => index >= 0)).toBe(true);
+  expect(order).toEqual([...order].sort((a, b) => a - b));
+  // The same bundle is what the story page carries
+  expect(readFileSync(join(root, 'dist/index.html'), 'utf8')).toContain('@container card');
+}, 60000);
