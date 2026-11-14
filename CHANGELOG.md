@@ -2,6 +2,7 @@
 
 ## Unreleased
 
+- Fix production builds failing on container queries (and other CSS newer than csso 5, which has had no release since 2022): `postcss-csso` is removed, so Vite's own CSS minifier (Lightning CSS, part of Vite 8) minifies the stylesheet. It already ran after csso, and it handles `@container`, `@layer`, `:has()` and `color-mix()`. It reorders nothing that changes the result (it may drop a rule a later one fully overrides, as csso did). A build with `--minify false` now leaves the CSS unminified too. If your project's `postcss.config.js` still uses `postcss-csso`, remove it and the package too. A regression test builds such a stylesheet in production mode.
 - Require Node.js 24 or later (`engines` in `package.json`), as Spindle, spindle-lsp and twee-ts 2 do. The workflows and the dev container use Node 24.
 - Commit `package-lock.json`, in the root and in `pack/capacitor`, so every install gets the versions the starter was tested with. The workflows and the Android packaging install with `npm ci`, and `npm run setup` updates the lockfile to match the package.json it edits. Keep committing the lockfile in your story's repository.
 - Commit the desktop app's `pack/tauri/src-tauri/Cargo.lock`, as Rust does for applications, so desktop builds use the crate versions the starter was tested with. In CI (when `CI` is set) the desktop build passes `--locked` to Cargo and fails if `Cargo.lock` is out of date; a local build still updates it after you edit `Cargo.toml`.
