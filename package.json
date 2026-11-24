@@ -37,21 +37,21 @@
     }
   },
   "devDependencies": {
-    "@rohal12/spindle": "^0.64.15",
-    "@rohal12/spindle-lsp": "^0.15.48",
+    "@rohal12/spindle": "^0.64.24",
+    "@rohal12/spindle-lsp": "^0.15.56",
     "@rohal12/twee-ts": "^2.1.0",
     "@types/archiver": "^8.0.0",
     "@types/browser-sync": "^2.29.1",
     "archiver": "^8.0.0",
     "browser-sync": "^3.0.4",
-    "postcss": "^8.5.31",
-    "postcss-preset-env": "^11.6.2",
-    "postcss-selector-parser": "^7.1.8",
-    "sass": "^1.108.1",
+    "postcss": "^8.5.33",
+    "postcss-preset-env": "^11.6.3",
+    "postcss-selector-parser": "^7.2.1",
+    "sass": "^1.108.2",
     "smol-toml": "^1.9.1",
     "tsx": "^4.23.15",
     "typescript": "^7.0.2",
-    "vite": "^8.3.7",
+    "vite": "^8.3.8",
     "vitepress": "^1.6.4",
     "vitest": "^5.1.0"
   }
