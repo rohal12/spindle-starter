@@ -30,7 +30,7 @@ jobs:
           # Release and deploy builds never restore a cache a PR could have written
           package-manager-cache: false
 
-      - uses: actions/setup-java@77dd5b2ce225ea11469928ac317850245a74ae78 # v6.2.0
+      - uses: actions/setup-java@d1374f8ac74474200d16ef8ecee22c7ae7a51880 # v6.3.0
         with:
           distribution: temurin
           java-version: 21 # Capacitor 8 needs Java 21
